@@ -4,41 +4,30 @@ import (
 	"errors"
 	"sort"
 
+	"github.com/heimdalr/dag"
 	"github.com/vanillaiice/verano/activity"
 )
 
+type Visitor struct {
+	Values []int
+}
+
+func (pv *Visitor) Visit(v dag.Vertexer) {
+	_, value := v.Vertex()
+	valueInt := value.(*activity.Activity).Id
+	pv.Values = append(pv.Values, valueInt)
+}
+
 // SortActivitiesByDeps performs a topological sort on the activities in the provided 'activitiesMap'
 // based on their dependencies and returns a slice representing the sorted order.
-// It uses a depth-first search (DFS) approach to traverse the activities and create the topological order.
+// It uses a topological sorting algorithm to treaverse the activities and create the topological order.
 // The resulting order ensures that activities with dependencies come before their dependent activities.
 // It should be noted that the relationship between the activities
 // is assumed to be start to finish.
-func SortActivitiesByDeps(activitiesMap map[int]*activity.Activity) []int {
-	visited := make(map[int]bool)
-	order := []int{}
-
-	var dfs func(int)
-	dfs = func(id int) {
-		visited[id] = true
-		for _, successorID := range activitiesMap[id].SuccessorsId {
-			if !visited[successorID] {
-				dfs(successorID)
-			}
-		}
-		order = append(order, id)
-	}
-
-	for id := range activitiesMap {
-		if !visited[id] {
-			dfs(id)
-		}
-	}
-
-	for i, j := 0, len(order)-1; i < j; i, j = i+1, j-1 {
-		order[i], order[j] = order[j], order[i]
-	}
-
-	return order
+func SortActivitiesByDeps(graph *dag.DAG) []int {
+	v := &Visitor{}
+	graph.OrderedWalk(v)
+	return v.Values
 }
 
 // SortActivitiesByOrder sorts activities from the provided 'activities' map based on the specified 'order'.

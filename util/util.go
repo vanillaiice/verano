@@ -1,6 +1,9 @@
 package util
 
 import (
+	"fmt"
+
+	"github.com/heimdalr/dag"
 	"github.com/vanillaiice/verano/activity"
 )
 
@@ -12,4 +15,25 @@ func ActivitiesToMap(activities []*activity.Activity) map[int]*activity.Activity
 		activitiesMap[a.Id] = a
 	}
 	return activitiesMap
+}
+
+// ActivitiesToGraph converts a slice of 'activities' into a directed acyclic graph (DAG).
+// It creates a new DAG, adds vertices for each activity, and establishes edges based on the successors' IDs.
+func ActivitiesToGraph(activities []*activity.Activity) (g *dag.DAG, err error) {
+	g = dag.NewDAG()
+	for _, act := range activities {
+		err = g.AddVertexByID(fmt.Sprint(act.Id), act)
+		if err != nil {
+			return g, err
+		}
+	}
+	for _, act := range activities {
+		for _, successorId := range act.SuccessorsId {
+			err = g.AddEdge(fmt.Sprint(act.Id), fmt.Sprint(successorId))
+			if err != nil {
+				return g, err
+			}
+		}
+	}
+	return
 }

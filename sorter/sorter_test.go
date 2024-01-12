@@ -17,10 +17,14 @@ var activities = []*activity.Activity{a1, a2, a3}
 var activitiesMap = util.ActivitiesToMap(activities)
 
 func TestSortActivitiesByDeps(t *testing.T) {
-	sortedOrder := SortActivitiesByDeps(activitiesMap)
-	sorted := []int{2, 1, 3}
-	if slices.Compare(sortedOrder, sorted) != 0 {
-		t.Errorf("sorted order wrong, want %v, got %v\n", sorted, sortedOrder)
+	activitiesGraph, err := util.ActivitiesToGraph(activities)
+	if err != nil {
+		t.Error(err)
+	}
+	sortedOrder := SortActivitiesByDeps(activitiesGraph)
+	expected := []int{2, 1, 3}
+	if slices.Compare(sortedOrder, expected) != 0 {
+		t.Errorf("sorted order wrong, want %v, got %v\n", expected, sortedOrder)
 	}
 }
 
