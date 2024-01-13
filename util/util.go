@@ -2,6 +2,8 @@ package util
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/heimdalr/dag"
 	"github.com/vanillaiice/verano/activity"
@@ -36,4 +38,26 @@ func ActivitiesToGraph(activities []*activity.Activity) (g *dag.DAG, err error) 
 		}
 	}
 	return
+}
+
+// Flat converts a slice of integers into a comma-separated string.
+func Flat(vals []int) string {
+	return strings.Trim(strings.Join(strings.Fields(fmt.Sprint(vals)), ","), "[]")
+}
+
+// Unflat converts a comma-separated string into a slice of integers.
+func Unflat(s string) ([]int, error) {
+	var intVals []int
+	if s == "" {
+		return intVals, nil
+	}
+	sVals := strings.Split(s, ",")
+	for _, s := range sVals {
+		val, err := strconv.Atoi(strings.TrimSpace(s))
+		if err != nil {
+			return nil, err
+		}
+		intVals = append(intVals, val)
+	}
+	return intVals, nil
 }

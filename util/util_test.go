@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -48,4 +49,25 @@ func TestActivitiesToGraph(t *testing.T) {
 			t.Errorf("got %s, want %s", g.String(), expected)
 		}
 	*/
+}
+
+func TestFlat(t *testing.T) {
+	a := []int{1, 2, 3, 4}
+	aflat := Flat(a)
+
+	if "1,2,3,4" != aflat {
+		t.Error("Unexpected error")
+	}
+}
+
+func TestUnflat(t *testing.T) {
+	s := "1,2,3,4"
+	sunflat, err := Unflat(s)
+	if err != nil {
+		t.Error(err)
+	}
+	want := []int{1, 2, 3, 4}
+	if slices.Compare(sunflat, want) != 0 {
+		t.Errorf("Error, want %v, got %v", want, sunflat)
+	}
 }

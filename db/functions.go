@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/vanillaiice/verano/activity"
+	"github.com/vanillaiice/verano/util"
 )
 
 // TableName is the name of the table in the sqlite database
@@ -33,8 +34,8 @@ func InsertActivity(sqldb *sql.DB, act *activity.Activity) error {
 		act.Id,
 		act.Description,
 		act.Duration.Seconds(),
-		flat(act.PredecessorsId),
-		flat(act.SuccessorsId),
+		util.Flat(act.PredecessorsId),
+		util.Flat(act.SuccessorsId),
 		act.Start.Unix(),
 		act.Finish.Unix(),
 		act.Cost,
@@ -58,8 +59,8 @@ func InsertActivities(sqldb *sql.DB, activities []*activity.Activity) error {
 			a.Id,
 			a.Description,
 			a.Duration.Seconds(),
-			flat(a.PredecessorsId),
-			flat(a.SuccessorsId),
+			util.Flat(a.PredecessorsId),
+			util.Flat(a.SuccessorsId),
 			a.Start.Unix(),
 			a.Finish.Unix(),
 			a.Cost,
@@ -89,11 +90,11 @@ func GetActivityById(sqldb *sql.DB, id int) (*activity.Activity, error) {
 		return act, err
 	}
 
-	pIds, err := unflat(predecessorsId)
+	pIds, err := util.Unflat(predecessorsId)
 	if err != nil {
 		return act, err
 	}
-	sIds, err := unflat(successorsId)
+	sIds, err := util.Unflat(successorsId)
 	if err != nil {
 		return act, err
 	}
@@ -115,7 +116,7 @@ func GetActivityById(sqldb *sql.DB, id int) (*activity.Activity, error) {
 func GetActivitiesById(sqldb *sql.DB, ids []int) ([]*activity.Activity, error) {
 	var activities []*activity.Activity
 
-	stmt := fmt.Sprintf("SELECT * FROM %s WHERE id IN (%s)", TableName, flat(ids))
+	stmt := fmt.Sprintf("SELECT * FROM %s WHERE id IN (%s)", TableName, util.Flat(ids))
 	rows, err := sqldb.Query(stmt)
 	if err != nil {
 		return activities, err
@@ -132,11 +133,11 @@ func GetActivitiesById(sqldb *sql.DB, ids []int) ([]*activity.Activity, error) {
 			return activities, err
 		}
 
-		pIds, err := unflat(predecessorsId)
+		pIds, err := util.Unflat(predecessorsId)
 		if err != nil {
 			return activities, err
 		}
-		sIds, err := unflat(successorsId)
+		sIds, err := util.Unflat(successorsId)
 		if err != nil {
 			return activities, err
 		}
@@ -175,11 +176,11 @@ func GetAllActivities(sqldb *sql.DB) ([]*activity.Activity, error) {
 			return activities, err
 		}
 
-		pIds, err := unflat(predecessorsId)
+		pIds, err := util.Unflat(predecessorsId)
 		if err != nil {
 			return activities, err
 		}
-		sIds, err := unflat(successorsId)
+		sIds, err := util.Unflat(successorsId)
 		if err != nil {
 			return activities, err
 		}
@@ -220,11 +221,11 @@ func GetAllActivitiesMap(sqldb *sql.DB) (map[int]*activity.Activity, error) {
 			return activities, err
 		}
 
-		pIds, err := unflat(predecessorsId)
+		pIds, err := util.Unflat(predecessorsId)
 		if err != nil {
 			return activities, err
 		}
-		sIds, err := unflat(successorsId)
+		sIds, err := util.Unflat(successorsId)
 		if err != nil {
 			return activities, err
 		}
@@ -250,8 +251,8 @@ func UpdateActivityById(sqldb *sql.DB, act *activity.Activity, id int) (int64, e
 		TableName,
 		act.Description,
 		act.Duration.Seconds(),
-		flat(act.PredecessorsId),
-		flat(act.SuccessorsId),
+		util.Flat(act.PredecessorsId),
+		util.Flat(act.SuccessorsId),
 		act.Start.Unix(),
 		act.Finish.Unix(),
 		act.Cost,
@@ -272,7 +273,7 @@ func UpdatePredecessorsById(sqldb *sql.DB, id int, predecessorsId []int) (int64,
 	var n int64
 	stmt := fmt.Sprintf("UPDATE %s SET predecessorsId=%q WHERE id = %d",
 		TableName,
-		flat(predecessorsId),
+		util.Flat(predecessorsId),
 		id,
 	)
 	res, err := sqldb.Exec(stmt)
@@ -290,7 +291,7 @@ func UpdateSuccessorsById(sqldb *sql.DB, id int, successorsId []int) (int64, err
 	var n int64
 	stmt := fmt.Sprintf("UPDATE %s SET successorsId=%q WHERE id = %d",
 		TableName,
-		flat(successorsId),
+		util.Flat(successorsId),
 		id,
 	)
 	res, err := sqldb.Exec(stmt)
@@ -320,7 +321,7 @@ func DeleteActivityById(sqldb *sql.DB, id int) (int64, error) {
 
 func DeleteActivitiesById(sqldb *sql.DB, ids []int) (int64, error) {
 	var n int64
-	stmt := fmt.Sprintf("DELETE FROM %s WHERE id IN (%s)", TableName, flat(ids))
+	stmt := fmt.Sprintf("DELETE FROM %s WHERE id IN (%s)", TableName, util.Flat(ids))
 	res, err := sqldb.Exec(stmt)
 	if err != nil && err != sql.ErrNoRows {
 		return n, err
