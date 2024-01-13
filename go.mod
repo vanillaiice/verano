@@ -5,7 +5,6 @@ go 1.21.5
 require (
 	github.com/goccy/go-graphviz v0.1.2
 	github.com/heimdalr/dag v1.4.0
-	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
 	modernc.org/sqlite v1.28.0
 )
 
