@@ -11,6 +11,7 @@ import (
 const timeFormat = "2 Jan 2006 15:04"
 
 func Draw(graph *cgraph.Graph, activities map[int]*activity.Activity) (err error) {
+	graph.SetRankDir(cgraph.LRRank)
 	for k, v := range activities {
 		node, err := graph.CreateNode(fmt.Sprint(k))
 		if err != nil {
