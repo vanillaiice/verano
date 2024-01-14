@@ -54,3 +54,15 @@ func TestActivitiesToCSV(t *testing.T) {
 		t.Errorf("error parsing csv: want %s, got %s\n", scsv, sb)
 	}
 }
+
+func TestCSVToActivities(t *testing.T) {
+	acts, err := CSVToActivities([]byte(scsv))
+	if err != nil {
+		t.Error(err)
+	}
+	for i := 0; i < len(activities); i++ {
+		if acts[i].Id != activities[i].Id {
+			t.Errorf("got %+v, want %+v", acts[i], activities[i])
+		}
+	}
+}

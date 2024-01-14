@@ -75,8 +75,8 @@ func TestExportToDb(t *testing.T) {
 	}
 }
 
-func TestActivitiesToJson(t *testing.T) {
-	b, err := ActivitiesToJson(activities)
+func TestActivitiesToJSON(t *testing.T) {
+	b, err := ActivitiesToJSON(activities)
 	if err != nil {
 		t.Error(err)
 	}
@@ -84,5 +84,17 @@ func TestActivitiesToJson(t *testing.T) {
 	sb := string(b)
 	if sb != j {
 		t.Errorf("error parsing json: want %s, got %s\n", j, sb)
+	}
+}
+
+func TestJSONToActivities(t *testing.T) {
+	acts, err := JSONtoActivities([]byte(j))
+	if err != nil {
+		t.Error(err)
+	}
+	for i := 0; i < len(activities); i++ {
+		if acts[i].Id != activities[i].Id {
+			t.Errorf("got %+v, want %+v", acts[i], activities[i])
+		}
 	}
 }

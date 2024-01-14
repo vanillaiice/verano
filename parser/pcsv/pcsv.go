@@ -61,6 +61,27 @@ func ActivitiesToCSV(activities []*activity.Activity, w io.Writer) (err error) {
 	return
 }
 
+func CSVToActivities(b []byte) (activities []*activity.Activity, err error) {
+	r := bytes.NewReader(b)
+	reader := csv.NewReader(r)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return
+	}
+
+	for _, record := range records {
+		if record[0] == "Id" {
+			continue
+		}
+		activity, err := recordToActivity(record)
+		if err != nil {
+			return activities, err
+		}
+		activities = append(activities, activity)
+	}
+	return
+}
+
 // Convert record to *Activity pointer
 func recordToActivity(record []string) (act *activity.Activity, err error) {
 	id, err := strconv.Atoi(record[0])
