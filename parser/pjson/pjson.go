@@ -9,27 +9,26 @@ import (
 )
 
 // ExportToDb populates the database with activities in json format
-func ExportToDb(j []byte, sqldb *sql.DB) error {
-	var activities []*activity.Activity
-	err := json.Unmarshal(j, &activities)
+func ExportToDb(j []byte, sqldb *sql.DB) (err error) {
+	activities, err := JSONtoActivities(j)
 	if err != nil {
-		return err
+		return
 	}
 
 	err = db.InsertActivities(sqldb, activities)
 	if err != nil {
-		return err
+		return
 	}
-	return nil
+	return
 }
 
 // ActivitiesToJSON converts a slice of activities to json format
-func ActivitiesToJSON(activities []*activity.Activity) ([]byte, error) {
-	j, err := json.MarshalIndent(activities, "", "\t")
+func ActivitiesToJSON(activities []*activity.Activity) (j []byte, err error) {
+	j, err = json.MarshalIndent(activities, "", "\t")
 	if err != nil {
-		return j, err
+		return
 	}
-	return j, nil
+	return
 }
 
 // JSONtoActivities converts activities in json format to a slice of activities

@@ -16,23 +16,9 @@ import (
 
 // ExportToDb populates the database with activities in csv format
 func ExportToDb(b []byte, sqldb *sql.DB) (err error) {
-	var activities []*activity.Activity
-	r := bytes.NewReader(b)
-	reader := csv.NewReader(r)
-	records, err := reader.ReadAll()
+	activities, err := CSVToActivities(b)
 	if err != nil {
 		return
-	}
-
-	for _, record := range records {
-		if record[0] == "Id" {
-			continue
-		}
-		activity, err := recordToActivity(record)
-		if err != nil {
-			return err
-		}
-		activities = append(activities, activity)
 	}
 
 	err = db.InsertActivities(sqldb, activities)
@@ -61,6 +47,7 @@ func ActivitiesToCSV(activities []*activity.Activity, w io.Writer) (err error) {
 	return
 }
 
+// CSVToActivities converts csv format to a slice of activities
 func CSVToActivities(b []byte) (activities []*activity.Activity, err error) {
 	r := bytes.NewReader(b)
 	reader := csv.NewReader(r)
@@ -82,7 +69,7 @@ func CSVToActivities(b []byte) (activities []*activity.Activity, err error) {
 	return
 }
 
-// Convert record to *Activity pointer
+// recordToActivity converts a record to an Activity pointer
 func recordToActivity(record []string) (act *activity.Activity, err error) {
 	id, err := strconv.Atoi(record[0])
 	if err != nil {
@@ -135,7 +122,7 @@ func recordToActivity(record []string) (act *activity.Activity, err error) {
 	return act, nil
 }
 
-// Convert Activity struct to slice of strings
+// activityToRecord converts an Activity struct to a slice of strings
 func activityToRecord(act *activity.Activity) []string {
 	return []string{
 		fmt.Sprint(act.Id),
