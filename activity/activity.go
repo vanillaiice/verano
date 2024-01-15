@@ -1,6 +1,8 @@
 package activity
 
 import (
+	"fmt"
+	"slices"
 	"time"
 )
 
@@ -16,54 +18,66 @@ type Activity struct {
 	Cost           float64       // Cost of the activity
 }
 
-/*
-func (a *Activity) AddPredecessor(id int, sqldb *sql.DB) {
+// AddPredecessor adds a predecessor with the given 'id' to the activity's predecessors list.
+// It returns an error if the predecessor already exists in the list.
+func (a *Activity) AddPredecessor(id int) (err error) {
+	if slices.Index(a.PredecessorsId, id) != -1 {
+		return fmt.Errorf("predecessor with id %d already exists", id)
+	}
 	a.PredecessorsId = append(a.PredecessorsId, id)
-	// update in db too
+	return
 }
 
-func (a *Activity) AddSuccessor(id int) {
+// AddSuccessor adds a successor with the given 'id' to the activity's successors list.
+// It returns an error if the successor already exists in the list.
+func (a *Activity) AddSuccessor(id int) (err error) {
+	if slices.Index(a.SuccessorsId, id) != -1 {
+		return fmt.Errorf("successor with id %d already exists", id)
+	}
 	a.SuccessorsId = append(a.SuccessorsId, id)
-	// update in db too
+	return
 }
 
-func (a *Activity) RemovePredecessor(id int) error {
+// RemovePredecessor removes the predecessor with the given 'id' from the activity's predecessors list.
+// It returns an error if the predecessor is not found in the list.
+func (a *Activity) RemovePredecessor(id int) (err error) {
 	idx := slices.Index(a.PredecessorsId, id)
 	if idx == -1 {
-		return errors.New(fmt.Sprintf("No predecessor with id %d", id))
+		return fmt.Errorf("No predecessor with id %d", id)
 	}
 	a.PredecessorsId = slices.Delete(a.PredecessorsId, idx, idx+1)
-	return nil
-	// update in db too
+	return
 }
 
-func (a *Activity) RemoveSuccessor(id int) error {
+// RemoveSuccessor removes the successor with the given 'id' from the activity's successors list.
+// It returns an error if the successor is not found in the list.
+func (a *Activity) RemoveSuccessor(id int) (err error) {
 	idx := slices.Index(a.SuccessorsId, id)
 	if idx == -1 {
-		return errors.New(fmt.Sprintf("No successor with id %d", id))
+		return fmt.Errorf(fmt.Sprintf("No successor with id %d", id))
 	}
 	a.SuccessorsId = slices.Delete(a.SuccessorsId, idx, idx+1)
-	return nil
-	// update in db too
+	return
 }
 
-func (a *Activity) UpdatePredecessorId(oldId, newId int) error {
+// UpdatePredecessorId updates the predecessor ID from 'oldId' to 'newId' in the activity's predecessors list.
+// It returns an error if the predecessor with 'oldId' is not found.
+func (a *Activity) UpdatePredecessorId(oldId, newId int) (err error) {
 	idx := slices.Index(a.PredecessorsId, oldId)
 	if idx == -1 {
-		return errors.New(fmt.Sprintf("No predecessor with id %d", oldId))
+		return fmt.Errorf(fmt.Sprintf("No predecessor with id %d", oldId))
 	}
 	a.PredecessorsId = slices.Replace(a.PredecessorsId, idx, idx+1, newId)
-	return nil
-	// update in db too
+	return
 }
 
-func (a *Activity) UpdateSuccessorId(oldId, newId int) error {
+// UpdateSuccessorId updates the successor ID from 'oldId' to 'newId' in the activity's successors list.
+// It returns an error if the successor with 'oldId' is not found.
+func (a *Activity) UpdateSuccessorId(oldId, newId int) (err error) {
 	idx := slices.Index(a.SuccessorsId, oldId)
 	if idx == -1 {
-		return errors.New(fmt.Sprintf("No successor with id %d", oldId))
+		return fmt.Errorf(fmt.Sprintf("No successor with id %d", oldId))
 	}
 	a.SuccessorsId = slices.Replace(a.SuccessorsId, idx, idx+1, newId)
-	return nil
-	// update in db too
+	return
 }
-*/
