@@ -26,8 +26,16 @@ func ExportToDb(sheet *xlsx.Sheet, sqldb *sql.DB) (err error) {
 
 // ActivitiesToXLSX converts a slice of activities to xlsx format
 func ActivitiesToXLSX(activities []*activity.Activity, sheet *xlsx.Sheet) {
+	row := sheet.AddRow()
+	headings := []string{"Id", "Description", "Duration", "Start", "Finish", "PredecessorsId", "SuccessorsId", "Cost"}
+	for _, h := range headings {
+		c := row.AddCell()
+		c.SetString(h)
+		row.PushCell(c)
+	}
+
 	for _, activity := range activities {
-		row := sheet.AddRow()
+		row = sheet.AddRow()
 		cells := []*xlsx.Cell{}
 
 		id := row.AddCell()
