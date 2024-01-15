@@ -1,4 +1,4 @@
-package gantt
+package timeline
 
 import (
 	"time"

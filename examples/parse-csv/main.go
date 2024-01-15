@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/vanillaiice/verano/gantt"
 	"github.com/vanillaiice/verano/parser/pcsv"
+	"github.com/vanillaiice/verano/project/timeline"
 	"github.com/vanillaiice/verano/sorter"
 	"github.com/vanillaiice/verano/util"
 )
@@ -39,7 +39,7 @@ func main() {
 	// and the activity as the value
 	activitiesMap := util.ActivitiesToMap(activities)
 	// Update the Start and Finish time of the activities after getting sorted
-	gantt.UpdateStartFinishTime(activitiesMap, order, projectStartDate)
+	timeline.UpdateStartFinishTime(activitiesMap, order, projectStartDate)
 
 	// Print activities in order
 	for i, o := range order {

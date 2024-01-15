@@ -7,7 +7,7 @@ import (
 
 	"github.com/goccy/go-graphviz"
 	"github.com/vanillaiice/verano/activity"
-	"github.com/vanillaiice/verano/gantt"
+	"github.com/vanillaiice/verano/project/timeline"
 	"github.com/vanillaiice/verano/sorter"
 	"github.com/vanillaiice/verano/util"
 )
@@ -29,7 +29,7 @@ var activitiesSortedMap = util.ActivitiesToMap(activitiesSorted)
 var g = graphviz.New()
 
 func TestDraw(t *testing.T) {
-	gantt.UpdateStartFinishTime(activitiesSortedMap, order, time.Now())
+	timeline.UpdateStartFinishTime(activitiesSortedMap, order, time.Now())
 	graph, err := g.Graph()
 	if err != nil {
 		t.Error(err)
