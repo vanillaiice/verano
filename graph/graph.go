@@ -8,8 +8,12 @@ import (
 	"github.com/vanillaiice/verano/activity"
 )
 
+// Time format to use when parsing
 const timeFormat = "2 Jan 2006 15:04"
 
+// Draw draws a graphviz graph from a map of activities.
+// The graph shows the relationships between activities,
+// and the order of activities.
 func Draw(graph *cgraph.Graph, activities map[int]*activity.Activity) (err error) {
 	graph.SetRankDir(cgraph.LRRank)
 	for k, v := range activities {
@@ -38,6 +42,7 @@ func Draw(graph *cgraph.Graph, activities map[int]*activity.Activity) (err error
 	return
 }
 
+// GraphToImage renders a graph to an image
 func GraphToImage(graph *graphviz.Graphviz, g *cgraph.Graph, format graphviz.Format, filename string) (err error) {
 	err = graph.RenderFilename(g, format, filename)
 	return

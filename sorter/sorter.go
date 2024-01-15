@@ -33,15 +33,14 @@ func SortActivitiesByDeps(graph *dag.DAG) []int {
 // SortActivitiesByOrder sorts activities from the provided 'activities' map based on the specified 'order'.
 // It returns a slice of pointers to activities in the sorted order. An error is returned if the length of
 // 'activities' does not match the length of 'order'.
-func SortActivitiesByOrder(activities map[int]*activity.Activity, order []int) ([]*activity.Activity, error) {
-	a := []*activity.Activity{}
+func SortActivitiesByOrder(activities map[int]*activity.Activity, order []int) (acts []*activity.Activity, err error) {
 	if len(activities) != len(order) {
-		return a, errors.New("length of activities do not match length of order")
+		return acts, errors.New("length of activities do not match length of order")
 	}
 	for _, id := range order {
-		a = append(a, activities[id])
+		acts = append(acts, activities[id])
 	}
-	return a, nil
+	return
 }
 
 // SortActivitiesById sorts the provided activities

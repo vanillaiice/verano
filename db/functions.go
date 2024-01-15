@@ -12,24 +12,24 @@ import (
 // TableName is the name of the table in the sqlite database
 const TableName = "activities"
 
-func Open(path string) (*sql.DB, error) {
-	var sqldb *sql.DB
-	sqldb, err := sql.Open("sqlite", path)
+func Open(path string) (sqldb *sql.DB, err error) {
+	sqldb, err = sql.Open("sqlite", path)
 	if err != nil {
-		return sqldb, err
+		return
 	}
 
 	stmt := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(id INTEGER PRIMARY KEY, description TEXT, duration REAL, predecessorsId TEXT, successorsId TEXT, start INTEGER, finish INTEGER, cost REAL)", TableName)
 	_, err = sqldb.Exec(stmt)
 	if err != nil {
-		return sqldb, err
+		return
 	}
 
-	return sqldb, nil
+	return
 }
 
-func InsertActivity(sqldb *sql.DB, act *activity.Activity) error {
-	stmt := fmt.Sprintf("INSERT INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(%d, %q, %.6f, %q, %q, %d, %d, %.6f)",
+func InsertActivity(sqldb *sql.DB, act *activity.Activity) (err error) {
+	stmt := fmt.Sprintf(
+		"INSERT INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(%d, %q, %.6f, %q, %q, %d, %d, %.6f)",
 		TableName,
 		act.Id,
 		act.Description,
@@ -40,17 +40,18 @@ func InsertActivity(sqldb *sql.DB, act *activity.Activity) error {
 		act.Finish.Unix(),
 		act.Cost,
 	)
-	_, err := sqldb.Exec(stmt)
+	_, err = sqldb.Exec(stmt)
 	if err != nil {
-		return err
+		return
 	}
-	return nil
+	return
 }
 
-func InsertActivities(sqldb *sql.DB, activities []*activity.Activity) error {
-	stmt, err := sqldb.Prepare(fmt.Sprintf("INSERT INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(?, ?, ?, ?, ?, ?, ?, ?)", TableName))
+func InsertActivities(sqldb *sql.DB, activities []*activity.Activity) (err error) {
+	stmt, err := sqldb.Prepare(fmt.Sprintf(
+		"INSERT INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(?, ?, ?, ?, ?, ?, ?, ?)", TableName))
 	if err != nil {
-		return err
+		return
 	}
 	defer stmt.Close()
 
@@ -66,19 +67,17 @@ func InsertActivities(sqldb *sql.DB, activities []*activity.Activity) error {
 			a.Cost,
 		)
 		if err != nil {
-			return err
+			return
 		}
 	}
 
-	return nil
+	return
 }
 
-func GetActivityById(sqldb *sql.DB, id int) (*activity.Activity, error) {
-	var act *activity.Activity
-
+func GetActivityById(sqldb *sql.DB, id int) (act *activity.Activity, err error) {
 	stmt, err := sqldb.Prepare(fmt.Sprintf("SELECT description, duration, predecessorsId, successorsId, start, finish, cost FROM %s WHERE id = ?", TableName))
 	if err != nil {
-		return act, err
+		return
 	}
 	defer stmt.Close()
 
@@ -87,16 +86,16 @@ func GetActivityById(sqldb *sql.DB, id int) (*activity.Activity, error) {
 	var start, finish int64
 	err = stmt.QueryRow(id).Scan(&description, &duration, &predecessorsId, &successorsId, &start, &finish, &cost)
 	if err != nil && err != sql.ErrNoRows {
-		return act, err
+		return
 	}
 
 	pIds, err := util.Unflat(predecessorsId)
 	if err != nil {
-		return act, err
+		return
 	}
 	sIds, err := util.Unflat(successorsId)
 	if err != nil {
-		return act, err
+		return
 	}
 
 	act = &activity.Activity{
@@ -110,16 +109,14 @@ func GetActivityById(sqldb *sql.DB, id int) (*activity.Activity, error) {
 		Cost:           cost,
 	}
 
-	return act, nil
+	return
 }
 
-func GetActivitiesById(sqldb *sql.DB, ids []int) ([]*activity.Activity, error) {
-	var activities []*activity.Activity
-
+func GetActivitiesById(sqldb *sql.DB, ids []int) (activities []*activity.Activity, err error) {
 	stmt := fmt.Sprintf("SELECT * FROM %s WHERE id IN (%s)", TableName, util.Flat(ids))
 	rows, err := sqldb.Query(stmt)
 	if err != nil {
-		return activities, err
+		return
 	}
 	defer rows.Close()
 
@@ -130,7 +127,7 @@ func GetActivitiesById(sqldb *sql.DB, ids []int) ([]*activity.Activity, error) {
 	for rows.Next() {
 		err = rows.Scan(&id, &description, &duration, &predecessorsId, &successorsId, &start, &finish, &cost)
 		if err != nil {
-			return activities, err
+			return
 		}
 
 		pIds, err := util.Unflat(predecessorsId)
@@ -154,15 +151,14 @@ func GetActivitiesById(sqldb *sql.DB, ids []int) ([]*activity.Activity, error) {
 		})
 	}
 
-	return activities, nil
+	return
 }
 
-func GetAllActivities(sqldb *sql.DB) ([]*activity.Activity, error) {
-	activities := []*activity.Activity{}
+func GetAllActivities(sqldb *sql.DB) (activities []*activity.Activity, err error) {
 	stmt := fmt.Sprintf("SELECT * FROM %s", TableName)
 	rows, err := sqldb.Query(stmt)
 	if err != nil {
-		return activities, err
+		return
 	}
 	defer rows.Close()
 
@@ -199,15 +195,14 @@ func GetAllActivities(sqldb *sql.DB) ([]*activity.Activity, error) {
 			})
 	}
 
-	return activities, nil
+	return
 }
 
-func GetAllActivitiesMap(sqldb *sql.DB) (map[int]*activity.Activity, error) {
-	activities := make(map[int]*activity.Activity)
+func GetAllActivitiesMap(sqldb *sql.DB) (activitiesMap map[int]*activity.Activity, err error) {
 	stmt := fmt.Sprintf("SELECT * FROM %s", TableName)
 	rows, err := sqldb.Query(stmt)
 	if err != nil {
-		return activities, err
+		return
 	}
 	defer rows.Close()
 
@@ -218,19 +213,19 @@ func GetAllActivitiesMap(sqldb *sql.DB) (map[int]*activity.Activity, error) {
 	for rows.Next() {
 		err = rows.Scan(&id, &description, &duration, &predecessorsId, &successorsId, &start, &finish)
 		if err != nil {
-			return activities, err
+			return activitiesMap, err
 		}
 
 		pIds, err := util.Unflat(predecessorsId)
 		if err != nil {
-			return activities, err
+			return activitiesMap, err
 		}
 		sIds, err := util.Unflat(successorsId)
 		if err != nil {
-			return activities, err
+			return activitiesMap, err
 		}
 
-		activities[id] = &activity.Activity{
+		activitiesMap[id] = &activity.Activity{
 			Id:             id,
 			Description:    description,
 			Duration:       time.Duration(duration * float64(time.Second)),
@@ -242,12 +237,12 @@ func GetAllActivitiesMap(sqldb *sql.DB) (map[int]*activity.Activity, error) {
 		}
 	}
 
-	return activities, nil
+	return
 }
 
-func UpdateActivityById(sqldb *sql.DB, act *activity.Activity, id int) (int64, error) {
-	var n int64
-	stmt := fmt.Sprintf("UPDATE %s SET description = %q, duration = %.6f, predecessorsId=%q, successorsId=%q, start = %d, finish = %d, cost = %.6f WHERE id = %d",
+func UpdateActivityById(sqldb *sql.DB, act *activity.Activity, id int) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET description = %q, duration = %.6f, predecessorsId=%q, successorsId=%q, start = %d, finish = %d, cost = %.6f WHERE id = %d",
 		TableName,
 		act.Description,
 		act.Duration.Seconds(),
@@ -260,35 +255,34 @@ func UpdateActivityById(sqldb *sql.DB, act *activity.Activity, id int) (int64, e
 	)
 	res, err := sqldb.Exec(stmt)
 	if err != nil {
-		return n, err
+		return
 	}
 	n, err = res.RowsAffected()
 	if err != nil {
-		return n, err
+		return
 	}
-	return n, nil
+	return
 }
 
-func UpdatePredecessorsById(sqldb *sql.DB, id int, predecessorsId []int) (int64, error) {
-	var n int64
-	stmt := fmt.Sprintf("UPDATE %s SET predecessorsId=%q WHERE id = %d",
+func UpdatePredecessorsById(sqldb *sql.DB, id int, predecessorsId []int) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET predecessorsId=%q WHERE id = %d",
 		TableName,
 		util.Flat(predecessorsId),
 		id,
 	)
 	res, err := sqldb.Exec(stmt)
 	if err != nil {
-		return n, err
+		return
 	}
 	n, err = res.RowsAffected()
 	if err != nil {
-		return n, err
+		return
 	}
-	return n, nil
+	return
 }
 
-func UpdateSuccessorsById(sqldb *sql.DB, id int, successorsId []int) (int64, error) {
-	var n int64
+func UpdateSuccessorsById(sqldb *sql.DB, id int, successorsId []int) (n int64, err error) {
 	stmt := fmt.Sprintf("UPDATE %s SET successorsId=%q WHERE id = %d",
 		TableName,
 		util.Flat(successorsId),
@@ -296,39 +290,39 @@ func UpdateSuccessorsById(sqldb *sql.DB, id int, successorsId []int) (int64, err
 	)
 	res, err := sqldb.Exec(stmt)
 	if err != nil {
-		return n, err
+		return
 	}
 	n, err = res.RowsAffected()
 	if err != nil {
-		return n, err
+		return
 	}
-	return n, nil
+	return
 }
 
-func DeleteActivityById(sqldb *sql.DB, id int) (int64, error) {
-	var n int64
+func DeleteActivityById(sqldb *sql.DB, id int) (n int64, err error) {
 	stmt := fmt.Sprintf("DELETE FROM %s WHERE id = %d", TableName, id)
 	res, err := sqldb.Exec(stmt)
 	if err != nil && err != sql.ErrNoRows {
-		return n, err
+		return
 	}
 	n, err = res.RowsAffected()
 	if err != nil {
-		return n, err
+		return
 	}
-	return n, nil
+	return
 }
 
-func DeleteActivitiesById(sqldb *sql.DB, ids []int) (int64, error) {
-	var n int64
+func DeleteActivitiesById(sqldb *sql.DB, ids []int) (n int64, err error) {
 	stmt := fmt.Sprintf("DELETE FROM %s WHERE id IN (%s)", TableName, util.Flat(ids))
 	res, err := sqldb.Exec(stmt)
 	if err != nil && err != sql.ErrNoRows {
-		return n, err
+		return
 	}
 	n, err = res.RowsAffected()
 	if err != nil {
-		return n, err
+		return
 	}
-	return n, nil
+	return
 }
+
+// func UpdateXXXById(sqldb *sqldb, activityId int, newValue XXX) (n int64, err error)
