@@ -43,7 +43,7 @@ func (a *Activity) AddSuccessor(id int) (err error) {
 func (a *Activity) RemovePredecessor(id int) (err error) {
 	idx := slices.Index(a.PredecessorsId, id)
 	if idx == -1 {
-		return fmt.Errorf("No predecessor with id %d", id)
+		return fmt.Errorf("no predecessor with id %d", id)
 	}
 	a.PredecessorsId = slices.Delete(a.PredecessorsId, idx, idx+1)
 	return
@@ -54,7 +54,7 @@ func (a *Activity) RemovePredecessor(id int) (err error) {
 func (a *Activity) RemoveSuccessor(id int) (err error) {
 	idx := slices.Index(a.SuccessorsId, id)
 	if idx == -1 {
-		return fmt.Errorf(fmt.Sprintf("No successor with id %d", id))
+		return fmt.Errorf(fmt.Sprintf("no successor with id %d", id))
 	}
 	a.SuccessorsId = slices.Delete(a.SuccessorsId, idx, idx+1)
 	return
@@ -65,7 +65,7 @@ func (a *Activity) RemoveSuccessor(id int) (err error) {
 func (a *Activity) UpdatePredecessorId(oldId, newId int) (err error) {
 	idx := slices.Index(a.PredecessorsId, oldId)
 	if idx == -1 {
-		return fmt.Errorf(fmt.Sprintf("No predecessor with id %d", oldId))
+		return fmt.Errorf(fmt.Sprintf("no predecessor with id %d", oldId))
 	}
 	a.PredecessorsId = slices.Replace(a.PredecessorsId, idx, idx+1, newId)
 	return
@@ -76,7 +76,7 @@ func (a *Activity) UpdatePredecessorId(oldId, newId int) (err error) {
 func (a *Activity) UpdateSuccessorId(oldId, newId int) (err error) {
 	idx := slices.Index(a.SuccessorsId, oldId)
 	if idx == -1 {
-		return fmt.Errorf(fmt.Sprintf("No successor with id %d", oldId))
+		return fmt.Errorf(fmt.Sprintf("no successor with id %d", oldId))
 	}
 	a.SuccessorsId = slices.Replace(a.SuccessorsId, idx, idx+1, newId)
 	return
