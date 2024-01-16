@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/vanillaiice/verano/activity"
 	_ "modernc.org/sqlite"
@@ -22,112 +23,106 @@ func New(path string) (*DB, error) {
 		err error
 	)
 	db.DB, err = Open(path)
-	if err != nil {
-		return &db, err
-	}
-	return &db, nil
+	return &db, err
 }
 
 // InsertActivity inserts the provided activity into the database.
-func (db *DB) InsertActivity(act *activity.Activity) (err error) {
-	err = InsertActivity(db.DB, act)
-	if err != nil {
-		return
-	}
+func (db *DB) InsertActivity(act *activity.Activity) (n int64, err error) {
+	n, err = InsertActivity(db.DB, act)
 	return
 }
 
-// InsertActivity inserts the provided activities into the database.
+// InsertActivities inserts the provided activities into the database.
 func (db *DB) InsertActivities(activities []*activity.Activity) (err error) {
 	err = InsertActivities(db.DB, activities)
-	if err != nil {
-		return
-	}
 	return
 }
 
-// GetActivityById retrieves the activity with the specified id from the database.
-func (db *DB) GetActivityById(id int) (act *activity.Activity, err error) {
-	act, err = GetActivityById(db.DB, id)
-	if err != nil {
-		return
-	}
+// GetActivity retrieves the activity with the specified id from the database.
+func (db *DB) GetActivity(id int) (act *activity.Activity, err error) {
+	act, err = GetActivity(db.DB, id)
 	return
 }
 
-// GetActivityById retrieves the activities with the specified ids from the database.
-func (db *DB) GetActivitiesById(ids []int) (activities []*activity.Activity, err error) {
-	activities, err = GetActivitiesById(db.DB, ids)
-	if err != nil {
-		return
-	}
+// GetActivities retrieves the activities with the specified ids from the database.
+func (db *DB) GetActivities(ids []int) (activities []*activity.Activity, err error) {
+	activities, err = GetActivities(db.DB, ids)
 	return
 }
 
-// GetAllActivities retrieves all activities from the database.
+// GetActivitiesAll retrieves all activities from the database.
 // It returns a slice of pointers to activities.
-func (db *DB) GetAllActivities() (activities []*activity.Activity, err error) {
-	activities, err = GetAllActivities(db.DB)
-	if err != nil {
-		return
-	}
+func (db *DB) GetActivitiesAll() (activities []*activity.Activity, err error) {
+	activities, err = GetActivitiesAll(db.DB)
 	return
 }
 
-// GetAllActivitiesMap retrieves all activities from the database.
+// GetActivitiesAllMap retrieves all activities from the database,
 // and returns them as a map with activity ids as keys and pointers to activities as values.
-func (db *DB) GetAllActivitiesMap() (activitiesMap map[int]*activity.Activity, err error) {
-	activitiesMap, err = GetAllActivitiesMap(db.DB)
-	if err != nil {
-		return
-	}
+func (db *DB) GetActivitiesAllMap() (activitiesMap map[int]*activity.Activity, err error) {
+	activitiesMap, err = GetActivitiesAllMap(db.DB)
 	return
 }
 
-// UpdateActivityById updates the activity with the specified id in the database
+// UpdateActivity updates the activity with the specified id in the database
 // using the information provided in the activity.
-func (db *DB) UpdateActivityById(act *activity.Activity, id int) (n int64, err error) {
-	n, err = UpdateActivityById(db.DB, act, id)
-	if err != nil {
-		return
-	}
+func (db *DB) UpdateActivity(act *activity.Activity, id int) (n int64, err error) {
+	n, err = UpdateActivity(db.DB, act, id)
 	return
 }
 
-// UpdatePredecessorsById updates the predecessors of the activity with the specified id in the database.
-func (db *DB) UpdatePredecessorsById(id int, predecessorsId []int) (n int64, err error) {
-	n, err = UpdatePredecessorsById(db.DB, id, predecessorsId)
-	if err != nil {
-		return
-	}
+// UpdateId updates the id of an activity with the specified id in the database
+func (db *DB) UpdateId(oldId, newId int) (n int64, err error) {
+	n, err = UpdateId(db.DB, oldId, newId)
 	return
 }
 
-// UpdateSuccessorsById updates the successors of the activity with the specified id in the database.
-func (db *DB) UpdateSuccessorsById(id int, successorsId []int) (n int64, err error) {
-	n, err = UpdateSuccessorsById(db.DB, id, successorsId)
-	if err != nil {
-		return
-	}
+// UpdateDescription updates the description of an activity with the specified id in the database
+func (db *DB) UpdateDescription(id int, newDescription string) (n int64, err error) {
+	n, err = UpdateDescription(db.DB, id, newDescription)
 	return
 }
 
-// DeleteActivityById deletes the activity with the specified id from the database.
+// UpdateStart updates the start time of an activity with the specified id in the database
+func (db *DB) UpdateStart(id int, newStart time.Time) (n int64, err error) {
+	n, err = UpdateStart(db.DB, id, newStart)
+	return
+}
+
+// UpdateFinish updates the finish time of an activity with the specified id in the database
+func (db *DB) UpdateFinish(id int, newFinish time.Time) (n int64, err error) {
+	n, err = UpdateFinish(db.DB, id, newFinish)
+	return
+}
+
+// UpdateSuccessors updates the successors of the activity with the specified id in the database.
+func (db *DB) UpdateSuccessors(id int, successorsId []int) (n int64, err error) {
+	n, err = UpdateSuccessors(db.DB, id, successorsId)
+	return
+}
+
+// UpdateCost updates the cost of an activity with the specified id in the database
+func (db *DB) UpdateCost(id int, newCost float64) (n int64, err error) {
+	n, err = UpdateCost(db.DB, id, newCost)
+	return
+}
+
+// UpdatePredecessors updates the predecessors of the activity with the specified id in the database.
+func (db *DB) UpdatePredecessors(id int, predecessorsId []int) (n int64, err error) {
+	n, err = UpdatePredecessors(db.DB, id, predecessorsId)
+	return
+}
+
+// DeleteActivity deletes the activity with the specified id from the database.
 // It returns the number of affected rows and an error if the deletion operation encounters any issues.
-func (db *DB) DeleteActivityById(id int) (n int64, err error) {
-	n, err = DeleteActivityById(db.DB, id)
-	if err != nil {
-		return
-	}
+func (db *DB) DeleteActivity(id int) (n int64, err error) {
+	n, err = DeleteActivity(db.DB, id)
 	return
 }
 
-// DeleteActivityById deletes the activities with the specified ids from the database.
+// DeleteActivities deletes the activities with the specified ids from the database.
 // It returns the number of affected rows and an error if the deletion operation encounters any issues.
-func (db *DB) DeleteActivitiesById(ids []int) (n int64, err error) {
-	n, err = DeleteActivitiesById(db.DB, ids)
-	if err != nil {
-		return
-	}
+func (db *DB) DeleteActivities(ids []int) (n int64, err error) {
+	n, err = DeleteActivities(db.DB, ids)
 	return
 }

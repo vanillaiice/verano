@@ -13,12 +13,9 @@ var duration = 1 * time.Hour
 var start = time.Date(2024, 12, 31, 18, 0, 0, 0, time.Local)
 var finish = start.Add(duration)
 
-func openDB() (*DB, error) {
-	sqldb, err := New("test.db")
-	if err != nil {
-		return sqldb, err
-	}
-	return sqldb, err
+func openDB() (sqldb *DB, err error) {
+	sqldb, err = New("test.db")
+	return
 }
 
 func deleteDB() error {
@@ -40,7 +37,7 @@ func insertActivity(sqldb *DB, descr string) error {
 		Start:       start,
 		Finish:      finish,
 	}
-	err := sqldb.InsertActivity(activity)
+	_, err := sqldb.InsertActivity(activity)
 	if err != nil {
 		return err
 	}
@@ -49,7 +46,7 @@ func insertActivity(sqldb *DB, descr string) error {
 }
 
 func TestOpen(t *testing.T) {
-	sqldb, err := openDB()
+	sqldb, err := New("test.db")
 	if err != nil {
 		t.Error(err)
 	}
@@ -62,20 +59,20 @@ func TestInsertActivity(t *testing.T) {
 		t.Error(err)
 	}
 	defer sqldb.DB.Close()
-	insertActivity(sqldb, "tip your landlord")
+	err = insertActivity(sqldb, "tip your landlord")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestGetActivityById(t *testing.T) {
+func TestGetActivity(t *testing.T) {
 	sqldb, err := openDB()
 	if err != nil {
 		t.Error(err)
 	}
 	defer sqldb.DB.Close()
 
-	a, err := sqldb.GetActivityById(1)
+	a, err := sqldb.GetActivity(1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -95,7 +92,7 @@ func TestGetActivityById(t *testing.T) {
 	}
 }
 
-func TestGetActivitiesById(t *testing.T) {
+func TestGetActivities(t *testing.T) {
 	sqldb, err := openDB()
 	if err != nil {
 		t.Error(err)
@@ -110,7 +107,7 @@ func TestGetActivitiesById(t *testing.T) {
 		t.Error(err)
 	}
 
-	a, err := sqldb.GetActivitiesById([]int{1, 2})
+	a, err := sqldb.GetActivities([]int{1, 2})
 	if err != nil {
 		t.Error(t)
 	}
@@ -146,14 +143,14 @@ func TestGetActivitiesById(t *testing.T) {
 	}
 }
 
-func TestGetAllActivities(t *testing.T) {
+func TestGetActivitiesAll(t *testing.T) {
 	sqldb, err := openDB()
 	if err != nil {
 		t.Error(err)
 	}
 	defer sqldb.DB.Close()
 
-	a, err := sqldb.GetAllActivities()
+	a, err := sqldb.GetActivitiesAll()
 	if err != nil {
 		t.Error(t)
 	}
@@ -163,7 +160,7 @@ func TestGetAllActivities(t *testing.T) {
 	}
 }
 
-func TestUpdateActivityById(t *testing.T) {
+func TestUpdateActivity(t *testing.T) {
 	sqldb, err := openDB()
 	if err != nil {
 		t.Error(err)
@@ -175,7 +172,7 @@ func TestUpdateActivityById(t *testing.T) {
 	start2 := time.Date(2024, 1, 1, 10, 0, 0, 0, time.Local)
 	finish2 := start2.Add(duration2)
 
-	n, err := sqldb.UpdateActivityById(&activity.Activity{Description: descr2, Duration: duration2, Start: start2, Finish: finish2}, 1)
+	n, err := sqldb.UpdateActivity(&activity.Activity{Description: descr2, Duration: duration2, Start: start2, Finish: finish2}, 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -183,7 +180,7 @@ func TestUpdateActivityById(t *testing.T) {
 		t.Errorf("Unexpected error, expected 1 row to be affected, got %d", n)
 	}
 
-	a, err := sqldb.GetActivityById(1)
+	a, err := sqldb.GetActivity(1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -202,14 +199,14 @@ func TestUpdateActivityById(t *testing.T) {
 	}
 }
 
-func TestDeleteActivityById(t *testing.T) {
+func TestDeleteActivity(t *testing.T) {
 	sqldb, err := openDB()
 	if err != nil {
 		t.Error(err)
 	}
 	defer sqldb.DB.Close()
 
-	n, err := sqldb.DeleteActivityById(2)
+	n, err := sqldb.DeleteActivity(2)
 	if err != nil {
 		t.Error(err)
 	}
@@ -218,7 +215,7 @@ func TestDeleteActivityById(t *testing.T) {
 	}
 }
 
-func TestDeleteActivitiesById(t *testing.T) {
+func TestDeleteActivities(t *testing.T) {
 	sqldb, err := openDB()
 	if err != nil {
 		t.Error(err)
@@ -230,7 +227,7 @@ func TestDeleteActivitiesById(t *testing.T) {
 		t.Error(err)
 	}
 
-	n, err := sqldb.DeleteActivitiesById([]int{1, 3})
+	n, err := sqldb.DeleteActivities([]int{1, 3})
 	if err != nil {
 		t.Error(err)
 	}
