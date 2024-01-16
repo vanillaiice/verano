@@ -27,8 +27,8 @@ func ExportToDb(sheet *xlsx.Sheet, sqldb *sql.DB) (err error) {
 // ActivitiesToXLSX converts a slice of activities to xlsx format
 func ActivitiesToXLSX(activities []*activity.Activity, sheet *xlsx.Sheet) {
 	row := sheet.AddRow()
-	headings := []string{"Id", "Description", "Duration", "Start", "Finish", "PredecessorsId", "SuccessorsId", "Cost"}
-	for _, h := range headings {
+	header := []string{"Id", "Description", "Duration", "Start", "Finish", "PredecessorsId", "SuccessorsId", "Cost"}
+	for _, h := range header {
 		c := row.AddCell()
 		c.SetString(h)
 		row.PushCell(c)
@@ -93,11 +93,14 @@ func XLSXToActivities(sheet *xlsx.Sheet) (activities []*activity.Activity, err e
 		if err != nil {
 			return activities, err
 		}
+
 		description := row.GetCell(1).String()
+
 		duration, err := time.ParseDuration(row.GetCell(2).String())
 		if err != nil {
 			return activities, err
 		}
+
 		start := row.GetCell(3)
 		if start.String() == "" || start.String() == "0" {
 			act.Start = time.Time{}
@@ -108,6 +111,7 @@ func XLSXToActivities(sheet *xlsx.Sheet) (activities []*activity.Activity, err e
 			}
 			act.Start = startTime
 		}
+
 		finish := row.GetCell(4)
 		if finish.String() == "" || finish.String() == "0" {
 			act.Finish = time.Time{}
@@ -118,17 +122,26 @@ func XLSXToActivities(sheet *xlsx.Sheet) (activities []*activity.Activity, err e
 			}
 			act.Finish = finishTime
 		}
+
 		predecessorsId, err := util.Unflat(row.GetCell(5).String())
 		if err != nil {
 			return activities, err
 		}
+
 		successorsId, err := util.Unflat(row.GetCell(6).String())
 		if err != nil {
 			return activities, err
 		}
-		cost, err := row.GetCell(7).Float()
-		if err != nil {
-			return activities, err
+
+		cost := row.GetCell(7)
+		if cost.String() == "" {
+			act.Cost = 0
+		} else {
+			costFloat, err := cost.Float()
+			if err != nil {
+				return activities, err
+			}
+			act.Cost = costFloat
 		}
 
 		act.Id = id
@@ -136,7 +149,6 @@ func XLSXToActivities(sheet *xlsx.Sheet) (activities []*activity.Activity, err e
 		act.Duration = duration
 		act.PredecessorsId = predecessorsId
 		act.SuccessorsId = successorsId
-		act.Cost = cost
 
 		activities = append(activities, act)
 	}
