@@ -50,7 +50,7 @@ func main() {
 	die(err)
 	// convert the slice of sorted activities to a map
 	activitiesSortedMap := util.ActivitiesToMap(activitiesSorted)
-	// draw the graph ftom the activities
+	// draw the graph from the activities
 	err = graph.Draw(g, activitiesSortedMap)
 	die(err)
 	// render the graph to a PNG file
