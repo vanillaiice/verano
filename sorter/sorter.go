@@ -8,11 +8,11 @@ import (
 	"github.com/vanillaiice/verano/activity"
 )
 
-type Visitor struct {
+type visitor struct {
 	Values []int
 }
 
-func (pv *Visitor) Visit(v dag.Vertexer) {
+func (pv *visitor) Visit(v dag.Vertexer) {
 	_, value := v.Vertex()
 	valueInt := value.(*activity.Activity).Id
 	pv.Values = append(pv.Values, valueInt)
@@ -25,7 +25,7 @@ func (pv *Visitor) Visit(v dag.Vertexer) {
 // It should be noted that the relationship between the activities
 // is assumed to be start to finish.
 func SortActivitiesByDeps(graph *dag.DAG) []int {
-	v := &Visitor{}
+	v := &visitor{}
 	graph.OrderedWalk(v)
 	return v.Values
 }
