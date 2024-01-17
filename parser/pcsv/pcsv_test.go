@@ -31,7 +31,8 @@ func TestExportToDb(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = ExportToDb([]byte(scsv), sqldb.DB)
+	r := bytes.NewReader([]byte(scsv))
+	err = ExportToDb(sqldb.DB, r)
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,7 +57,8 @@ func TestActivitiesToCSV(t *testing.T) {
 }
 
 func TestCSVToActivities(t *testing.T) {
-	acts, err := CSVToActivities([]byte(scsv))
+	r := bytes.NewReader([]byte(scsv))
+	acts, err := CSVToActivities(r)
 	if err != nil {
 		t.Error(err)
 	}

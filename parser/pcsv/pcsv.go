@@ -1,7 +1,6 @@
 package pcsv
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/csv"
 	"fmt"
@@ -14,48 +13,36 @@ import (
 	"github.com/vanillaiice/verano/util"
 )
 
-// ExportToDb populates the database with activities in csv format
-func ExportToDb(b []byte, sqldb *sql.DB) (err error) {
-	activities, err := CSVToActivities(b)
+// ExportToDb populates the database with activities in csv format.
+func ExportToDb(sqldb *sql.DB, reader io.Reader) (err error) {
+	activities, err := CSVToActivities(reader)
 	if err != nil {
 		return
 	}
-
 	err = db.InsertActivities(sqldb, activities)
-	if err != nil {
-		return
-	}
 	return
 }
 
-// ActivitiesToCSV converts a slice of activities to csv format
+// ActivitiesToCSV converts a slice of activities to csv format.
 func ActivitiesToCSV(activities []*activity.Activity, w io.Writer) (err error) {
 	var records [][]string
 	records = append(records, []string{"Id", "Description", "Duration", "Start", "Finish", "PredecessorsId", "SuccessorsId", "Cost"})
 	for _, act := range activities {
 		records = append(records, activityToRecord(act))
 	}
-
 	writer := csv.NewWriter(w)
 	defer writer.Flush()
-
 	err = writer.WriteAll(records)
-	if err != nil {
-		return
-	}
-
 	return
 }
 
-// CSVToActivities converts csv format to a slice of activities
-func CSVToActivities(b []byte) (activities []*activity.Activity, err error) {
-	r := bytes.NewReader(b)
-	reader := csv.NewReader(r)
-	records, err := reader.ReadAll()
+// CSVToActivities converts csv format to a slice of activities.
+func CSVToActivities(reader io.Reader) (activities []*activity.Activity, err error) {
+	csvReader := csv.NewReader(reader)
+	records, err := csvReader.ReadAll()
 	if err != nil {
 		return
 	}
-
 	for _, record := range records {
 		if record[0] == "Id" {
 			continue
@@ -69,7 +56,7 @@ func CSVToActivities(b []byte) (activities []*activity.Activity, err error) {
 	return
 }
 
-// recordToActivity converts a record to an Activity pointer
+// recordToActivity converts a record to an Activity pointer.
 func recordToActivity(record []string) (act *activity.Activity, err error) {
 	id, err := strconv.Atoi(record[0])
 	if err != nil {
@@ -122,7 +109,7 @@ func recordToActivity(record []string) (act *activity.Activity, err error) {
 	return act, nil
 }
 
-// activityToRecord converts an Activity struct to a slice of strings
+// activityToRecord converts an Activity struct to a slice of strings.
 func activityToRecord(act *activity.Activity) []string {
 	return []string{
 		fmt.Sprint(act.Id),

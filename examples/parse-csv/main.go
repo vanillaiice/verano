@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"time"
@@ -20,7 +21,8 @@ var scsv = `Id,Description,Duration,Start,Finish,PredecessorsId,SuccessorsId,Cos
 
 func main() {
 	// Parse activities in CSV format to an activity slice
-	activities, err := pcsv.CSVToActivities([]byte(scsv))
+	r := bytes.NewReader([]byte(scsv))
+	activities, err := pcsv.CSVToActivities(r)
 	if err != nil {
 		log.Fatal(err)
 	}

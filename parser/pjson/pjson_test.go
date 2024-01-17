@@ -1,6 +1,8 @@
 package pjson
 
 import (
+	"bufio"
+	"bytes"
 	"os"
 	"testing"
 	"time"
@@ -64,7 +66,8 @@ func TestExportToDb(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = ExportToDb([]byte(j), sqldb.DB)
+	r := bytes.NewReader([]byte(j))
+	err = ExportToDb(sqldb.DB, r)
 	if err != nil {
 		t.Error(err)
 	}
@@ -76,19 +79,23 @@ func TestExportToDb(t *testing.T) {
 }
 
 func TestActivitiesToJSON(t *testing.T) {
-	b, err := ActivitiesToJSON(activities)
+	var buf bytes.Buffer
+	w := bufio.NewWriter(&buf)
+	err := ActivitiesToJSON(activities, w)
 	if err != nil {
 		t.Error(err)
 	}
+	w.Flush()
 
-	sb := string(b)
-	if sb != j {
-		t.Errorf("error parsing json: want %s, got %s\n", j, sb)
+	sbuf := buf.String()
+	if sbuf != j {
+		t.Errorf("error parsing json: want %s, got %s\n", j, sbuf)
 	}
 }
 
 func TestJSONToActivities(t *testing.T) {
-	acts, err := JSONtoActivities([]byte(j))
+	r := bytes.NewReader([]byte(j))
+	acts, err := JSONtoActivities(r)
 	if err != nil {
 		t.Error(err)
 	}

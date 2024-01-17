@@ -10,21 +10,18 @@ import (
 	"github.com/vanillaiice/verano/util"
 )
 
-// ExportToDb populates the database with activities in xlsx format
-func ExportToDb(sheet *xlsx.Sheet, sqldb *sql.DB) (err error) {
+// ExportToDb populates the database with activities in xlsx format.
+func ExportToDb(sqldb *sql.DB, sheet *xlsx.Sheet) (err error) {
 	activities, err := XLSXToActivities(sheet)
 	if err != nil {
 		return
 	}
 
 	err = db.InsertActivities(sqldb, activities)
-	if err != nil {
-		return
-	}
 	return
 }
 
-// ActivitiesToXLSX converts a slice of activities to xlsx format
+// ActivitiesToXLSX converts a slice of activities to xlsx format.
 func ActivitiesToXLSX(activities []*activity.Activity, sheet *xlsx.Sheet) {
 	row := sheet.AddRow()
 	header := []string{"Id", "Description", "Duration", "Start", "Finish", "PredecessorsId", "SuccessorsId", "Cost"}
@@ -76,7 +73,7 @@ func ActivitiesToXLSX(activities []*activity.Activity, sheet *xlsx.Sheet) {
 	}
 }
 
-// XLSXToActivities converts activities in xlsx format to a slice of activities
+// XLSXToActivities converts activities in xlsx format to a slice of activities.
 func XLSXToActivities(sheet *xlsx.Sheet) (activities []*activity.Activity, err error) {
 	for i := 0; i < sheet.MaxRow; i++ {
 		row, err := sheet.Row(i)
