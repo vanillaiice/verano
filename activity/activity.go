@@ -8,14 +8,14 @@ import (
 
 // Activity is a struct representing an activity with various attributes.
 type Activity struct {
-	Id             int           // Unique identifier of the activity
-	Description    string        // description of the activity
-	Duration       time.Duration // duration of the activity
-	Start          time.Time     // Start time of the activity
-	Finish         time.Time     // Finish time of he activity
-	PredecessorsId []int         // ID of the activities that precede
-	SuccessorsId   []int         // ID of the activities that come after
-	Cost           float64       // Cost of the activity
+	Id             int           `json:"id"`             // Unique identifier of the activity
+	Description    string        `json:"description"`    // description of the activity
+	Duration       time.Duration `json:"duration"`       // duration of the activity
+	Start          time.Time     `json:"start"`          // Start time of the activity
+	Finish         time.Time     `json:"finish"`         // Finish time of he activity
+	PredecessorsId []int         `json:"predecessorsId"` // ID of the activities that precede
+	SuccessorsId   []int         `json:"successorsId"`   // ID of the activities that come after
+	Cost           float64       `json:"cost"`           // Cost of the activity
 }
 
 // AddPredecessor adds a predecessor with the given 'id' to the activity's predecessors list.

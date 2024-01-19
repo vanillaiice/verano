@@ -13,42 +13,42 @@ import (
 
 var j = `[
 	{
-		"Id": 3,
-		"Description": "Cook eggs",
-		"Duration": 600000000000,
-		"Start": "0001-01-01T00:00:00Z",
-		"Finish": "0001-01-01T00:00:00Z",
-		"PredecessorsId": [
+		"id": 3,
+		"description": "cook eggs",
+		"duration": 600000000000,
+		"start": "0001-01-01T00:00:00Z",
+		"finish": "0001-01-01T00:00:00Z",
+		"predecessorsId": [
 			2
 		],
-		"SuccessorsId": [
+		"successorsId": [
 			1
 		],
-		"Cost": 0
+		"cost": 0
 	},
 	{
-		"Id": 2,
-		"Description": "Buy eggs",
-		"Duration": 1800000000000,
-		"Start": "0001-01-01T00:00:00Z",
-		"Finish": "0001-01-01T00:00:00Z",
-		"PredecessorsId": [],
-		"SuccessorsId": [
+		"id": 2,
+		"description": "Buy eggs",
+		"duration": 1800000000000,
+		"start": "0001-01-01T00:00:00Z",
+		"finish": "0001-01-01T00:00:00Z",
+		"predecessorsId": [],
+		"successorsId": [
 			3
 		],
-		"Cost": 100
+		"cost": 100
 	},
 	{
-		"Id": 1,
-		"Description": "Eat eggs",
-		"Duration": 1200000000000,
-		"Start": "0001-01-01T00:00:00Z",
-		"Finish": "0001-01-01T00:00:00Z",
-		"PredecessorsId": [
+		"id": 1,
+		"description": "Eat eggs",
+		"duration": 1200000000000,
+		"start": "0001-01-01T00:00:00Z",
+		"finish": "0001-01-01T00:00:00Z",
+		"predecessorsId": [
 			3
 		],
-		"SuccessorsId": [],
-		"Cost": 0
+		"successorsId": [],
+		"cost": 0
 	}
 ]`
 var d1 = time.Minute * 10
@@ -56,7 +56,7 @@ var d2 = time.Minute * 30
 var d3 = time.Minute * 20
 var tt = time.Time{}
 var activities = []*activity.Activity{
-	{Id: 3, Description: "Cook eggs", Duration: d1, PredecessorsId: []int{2}, SuccessorsId: []int{1}, Start: tt, Finish: tt, Cost: 0},
+	{Id: 3, Description: "cook eggs", Duration: d1, PredecessorsId: []int{2}, SuccessorsId: []int{1}, Start: tt, Finish: tt, Cost: 0},
 	{Id: 2, Description: "Buy eggs", Duration: d2, PredecessorsId: []int{}, SuccessorsId: []int{3}, Start: tt, Finish: tt, Cost: 100},
 	{Id: 1, Description: "Eat eggs", Duration: d3, PredecessorsId: []int{3}, SuccessorsId: []int{}, Start: tt, Finish: tt, Cost: 0},
 }
