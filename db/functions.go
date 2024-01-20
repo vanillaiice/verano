@@ -262,7 +262,7 @@ func UpdateId(sqldb *sql.DB, oldId, newId int) (n int64, err error) {
 
 func UpdateDescription(sqldb *sql.DB, id int, newDescription string) (n int64, err error) {
 	stmt := fmt.Sprintf(
-		"UPDATE %s SET description=%s WHERE id=%d",
+		"UPDATE %s SET description=%q WHERE id=%d",
 		TableName,
 		newDescription,
 		id,
