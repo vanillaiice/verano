@@ -83,6 +83,12 @@ func (db *DB) UpdateDescription(id int, newDescription string) (n int64, err err
 	return
 }
 
+// UpdateDuration updates the duration of an activity with the specified id in the database
+func (db *DB) UpdateDuration(id int, newDuration time.Duration) (n int64, err error) {
+	n, err = UpdateDuration(db.DB, id, newDuration)
+	return
+}
+
 // UpdateStart updates the start time of an activity with the specified id in the database
 func (db *DB) UpdateStart(id int, newStart time.Time) (n int64, err error) {
 	n, err = UpdateStart(db.DB, id, newStart)
