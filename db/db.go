@@ -8,6 +8,18 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+// TableName is the name of the table in the sqlite database.
+const TableName = "activities"
+
+// DuplicateInsertPolicy defines the policy for handling duplicate inserts in a database.
+type DuplicateInsertPolicy int
+
+// Enumeration of available duplicate insert policies.
+const (
+	Ignore  DuplicateInsertPolicy = 0 // Ignore duplicate inserts
+	Replace DuplicateInsertPolicy = 1 // Replace duplicate inserts
+)
+
 // A DB stores a pointer to a sqlite database connection.
 type DB struct {
 	DB *sql.DB
@@ -24,6 +36,11 @@ func New(path string) (*DB, error) {
 	)
 	db.DB, err = Open(path)
 	return &db, err
+}
+
+// Close closes the db connection
+func Close(db *DB) error {
+	return db.DB.Close()
 }
 
 // InsertActivity inserts the provided activity into the database.
