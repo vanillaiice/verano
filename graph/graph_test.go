@@ -1,7 +1,6 @@
 package graph
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -26,10 +25,10 @@ var activitiesGraph, _ = util.ActivitiesToGraph(activities)
 var order = sorter.SortActivitiesByDeps(activitiesGraph)
 var activitiesSorted, _ = sorter.SortActivitiesByOrder(activitiesMap, order)
 var activitiesSortedMap = util.ActivitiesToMap(activitiesSorted)
-var g = graphviz.New()
 
 func TestDraw(t *testing.T) {
 	timeline.UpdateStartFinishTime(activitiesSortedMap, order, time.Now())
+	var g = graphviz.New()
 	graph, err := g.Graph()
 	if err != nil {
 		t.Error(err)
@@ -44,20 +43,25 @@ func TestDraw(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	filename := "graph.png"
-	err = GraphToImage(g, graph, graphviz.PNG, filename)
-	if err != nil {
-		t.Error(err)
-	}
-	err = os.Remove(filename)
-	if err != nil {
-		t.Error(err)
-	}
 }
 
-/*
-// FIXME: this is causing a segfault smh
+func TestDrawAndRender(t *testing.T) {
+	var g = graphviz.New()
+	graph, err := g.Graph()
+	if err != nil {
+		t.Error(err)
+	}
+	defer func() {
+		if err = graph.Close(); err != nil {
+			return
+		}
+		g.Close()
+	}()
+	err = DrawAndRender(g, activitiesSortedMap, graphviz.PNG, "graph.png")
+}
+
 func TestGraphToImage(t *testing.T) {
+	var g = graphviz.New()
 	graph, err := g.Graph()
 	if err != nil {
 		t.Error(err)
@@ -73,4 +77,3 @@ func TestGraphToImage(t *testing.T) {
 		t.Error(err)
 	}
 }
-*/
