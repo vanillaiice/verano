@@ -9,9 +9,6 @@ import (
 	"github.com/vanillaiice/verano/util"
 )
 
-// TableName is the name of the table in the sqlite database
-const TableName = "activities"
-
 func Open(path string) (sqldb *sql.DB, err error) {
 	sqldb, err = sql.Open("sqlite", path)
 	if err != nil {
@@ -22,9 +19,22 @@ func Open(path string) (sqldb *sql.DB, err error) {
 	return
 }
 
-func InsertActivity(sqldb *sql.DB, act *activity.Activity) (n int64, err error) {
-	stmt := fmt.Sprintf(
-		"INSERT INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(%d, %q, %.6f, %q, %q, %d, %d, %.6f)",
+func InsertActivity(sqldb *sql.DB, act *activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (n int64, err error) {
+	if len(duplicateInsertPolicy) > 1 {
+		return n, fmt.Errorf("expected exactly one argument for duplicateInsertPolicy")
+	}
+	stmt := "INSERT "
+	if len(duplicateInsertPolicy) > 0 {
+		switch duplicateInsertPolicy[0] {
+		case Ignore:
+			stmt += "or IGNORE "
+		case Replace:
+			stmt += "or REPLACE "
+		}
+	}
+
+	stmt += fmt.Sprintf(
+		"INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(%d, %q, %.6f, %q, %q, %d, %d, %.6f)",
 		TableName,
 		act.Id,
 		act.Description,
@@ -39,9 +49,22 @@ func InsertActivity(sqldb *sql.DB, act *activity.Activity) (n int64, err error) 
 	return
 }
 
-func InsertActivities(sqldb *sql.DB, activities []*activity.Activity) (err error) {
-	stmt, err := sqldb.Prepare(fmt.Sprintf(
-		"INSERT INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(?, ?, ?, ?, ?, ?, ?, ?)", TableName))
+func InsertActivities(sqldb *sql.DB, activities []*activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (err error) {
+	if len(duplicateInsertPolicy) > 1 {
+		return fmt.Errorf("expected exactly one argument for duplicateInsertPolicy")
+	}
+	sStmt := "INSERT "
+	if len(duplicateInsertPolicy) > 0 {
+		switch duplicateInsertPolicy[0] {
+		case Ignore:
+			sStmt += "or IGNORE "
+		case Replace:
+			sStmt += "or REPLACE "
+		}
+	}
+	sStmt += fmt.Sprintf("INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(?, ?, ?, ?, ?, ?, ?, ?)", TableName)
+
+	stmt, err := sqldb.Prepare(sStmt)
 	if err != nil {
 		return
 	}
