@@ -11,6 +11,22 @@ import (
 // Time format to use when parsing
 const timeFormat = "2 Jan 2006 15:04"
 
+// DrawAndRender draws a graphviz graph from a map of activities
+// and then renders the graph to an image.
+func DrawAndRender(graph *graphviz.Graphviz, activitiesMap map[int]*activity.Activity, format graphviz.Format, filename string) (err error) {
+	g, err := graph.Graph()
+	if err != nil {
+		return err
+	}
+	defer g.Close()
+	err = Draw(g, activitiesMap)
+	if err != nil {
+		return err
+	}
+	err = GraphToImage(graph, g, format, filename)
+	return err
+}
+
 // Draw draws a graphviz graph from a map of activities.
 // The graph shows the relationships between activities,
 // and the order of activities.
