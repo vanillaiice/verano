@@ -1,7 +1,6 @@
 package pjson
 
 import (
-	"database/sql"
 	"encoding/json"
 	"io"
 
@@ -10,12 +9,12 @@ import (
 )
 
 // ExportToDb populates the database with activities in json format.
-func ExportToDb(sqldb *sql.DB, reader io.Reader) (err error) {
+func ExportToDb(sqldb *db.DB, reader io.Reader, duplicateInsertPolicy ...db.DuplicateInsertPolicy) (err error) {
 	activities, err := JSONtoActivities(reader)
 	if err != nil {
 		return
 	}
-	err = db.InsertActivities(sqldb, activities)
+	err = sqldb.InsertActivities(activities, duplicateInsertPolicy...)
 	return
 }
 

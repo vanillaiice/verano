@@ -1,7 +1,6 @@
 package pcsv
 
 import (
-	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -14,12 +13,12 @@ import (
 )
 
 // ExportToDb populates the database with activities in csv format.
-func ExportToDb(sqldb *sql.DB, reader io.Reader) (err error) {
+func ExportToDb(sqldb *db.DB, reader io.Reader, duplicateInsertPolicy ...db.DuplicateInsertPolicy) (err error) {
 	activities, err := CSVToActivities(reader)
 	if err != nil {
 		return
 	}
-	err = db.InsertActivities(sqldb, activities)
+	err = sqldb.InsertActivities(activities, duplicateInsertPolicy...)
 	return
 }
 

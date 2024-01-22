@@ -32,7 +32,7 @@ func TestExportToDb(t *testing.T) {
 		t.Error(err)
 	}
 	r := bytes.NewReader([]byte(scsv))
-	err = ExportToDb(sqldb.DB, r)
+	err = ExportToDb(sqldb, r)
 	if err != nil {
 		t.Error(err)
 	}

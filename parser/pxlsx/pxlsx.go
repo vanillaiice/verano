@@ -1,7 +1,6 @@
 package pxlsx
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/tealeg/xlsx/v3"
@@ -11,13 +10,13 @@ import (
 )
 
 // ExportToDb populates the database with activities in xlsx format.
-func ExportToDb(sqldb *sql.DB, sheet *xlsx.Sheet) (err error) {
+func ExportToDb(sqldb *db.DB, sheet *xlsx.Sheet, duplicateInsertPolicy ...db.DuplicateInsertPolicy) (err error) {
 	activities, err := XLSXToActivities(sheet)
 	if err != nil {
 		return
 	}
 
-	err = db.InsertActivities(sqldb, activities)
+	err = sqldb.InsertActivities(activities, duplicateInsertPolicy...)
 	return
 }
 

@@ -24,6 +24,7 @@ var j = `[
 		"successorsId": [
 			1
 		],
+		"progress": 0,
 		"cost": 0
 	},
 	{
@@ -36,6 +37,7 @@ var j = `[
 		"successorsId": [
 			3
 		],
+		"progress": 0,
 		"cost": 100
 	},
 	{
@@ -48,6 +50,7 @@ var j = `[
 			3
 		],
 		"successorsId": [],
+		"progress": 0,
 		"cost": 0
 	}
 ]`
@@ -67,7 +70,7 @@ func TestExportToDb(t *testing.T) {
 		t.Error(err)
 	}
 	r := bytes.NewReader([]byte(j))
-	err = ExportToDb(sqldb.DB, r)
+	err = ExportToDb(sqldb, r)
 	if err != nil {
 		t.Error(err)
 	}
