@@ -9,7 +9,7 @@ import (
 	"github.com/vanillaiice/verano/util"
 )
 
-func Open(path string) (sqldb *sql.DB, err error) {
+func open(path string) (sqldb *sql.DB, err error) {
 	sqldb, err = sql.Open("sqlite", path)
 	if err != nil {
 		return
@@ -19,7 +19,7 @@ func Open(path string) (sqldb *sql.DB, err error) {
 	return
 }
 
-func InsertActivity(sqldb *sql.DB, act *activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (n int64, err error) {
+func insertActivity(sqldb *sql.DB, act *activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (n int64, err error) {
 	if len(duplicateInsertPolicy) > 1 {
 		return n, fmt.Errorf("expected exactly one argument for duplicateInsertPolicy")
 	}
@@ -49,7 +49,7 @@ func InsertActivity(sqldb *sql.DB, act *activity.Activity, duplicateInsertPolicy
 	return
 }
 
-func InsertActivities(sqldb *sql.DB, activities []*activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (err error) {
+func insertActivities(sqldb *sql.DB, activities []*activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (err error) {
 	if len(duplicateInsertPolicy) > 1 {
 		return fmt.Errorf("expected exactly one argument for duplicateInsertPolicy")
 	}
@@ -89,7 +89,7 @@ func InsertActivities(sqldb *sql.DB, activities []*activity.Activity, duplicateI
 	return
 }
 
-func GetActivity(sqldb *sql.DB, id int) (act *activity.Activity, err error) {
+func getActivity(sqldb *sql.DB, id int) (act *activity.Activity, err error) {
 	stmt, err := sqldb.Prepare(fmt.Sprintf("SELECT description, duration, predecessorsId, successorsId, start, finish, cost FROM %s WHERE id = ?", TableName))
 	if err != nil {
 		return
@@ -127,7 +127,7 @@ func GetActivity(sqldb *sql.DB, id int) (act *activity.Activity, err error) {
 	return
 }
 
-func GetActivities(sqldb *sql.DB, ids []int) (activities []*activity.Activity, err error) {
+func getActivities(sqldb *sql.DB, ids []int) (activities []*activity.Activity, err error) {
 	stmt := fmt.Sprintf("SELECT * FROM %s WHERE id IN (%s)", TableName, util.Flat(ids))
 	rows, err := sqldb.Query(stmt)
 	if err != nil {
@@ -169,7 +169,7 @@ func GetActivities(sqldb *sql.DB, ids []int) (activities []*activity.Activity, e
 	return
 }
 
-func GetActivitiesAll(sqldb *sql.DB) (activities []*activity.Activity, err error) {
+func getActivitiesAll(sqldb *sql.DB) (activities []*activity.Activity, err error) {
 	stmt := fmt.Sprintf("SELECT * FROM %s", TableName)
 	rows, err := sqldb.Query(stmt)
 	if err != nil {
@@ -213,7 +213,7 @@ func GetActivitiesAll(sqldb *sql.DB) (activities []*activity.Activity, err error
 	return
 }
 
-func GetActivitiesAllMap(sqldb *sql.DB) (activitiesMap map[int]*activity.Activity, err error) {
+func getActivitiesAllMap(sqldb *sql.DB) (activitiesMap map[int]*activity.Activity, err error) {
 	stmt := fmt.Sprintf("SELECT * FROM %s", TableName)
 	rows, err := sqldb.Query(stmt)
 	if err != nil {
@@ -255,7 +255,7 @@ func GetActivitiesAllMap(sqldb *sql.DB) (activitiesMap map[int]*activity.Activit
 	return
 }
 
-func UpdateActivity(sqldb *sql.DB, act *activity.Activity, id int) (n int64, err error) {
+func updateActivity(sqldb *sql.DB, act *activity.Activity, id int) (n int64, err error) {
 	stmt := fmt.Sprintf(
 		"UPDATE %s SET description = %q, duration = %.6f, predecessorsId=%q, successorsId=%q, start = %d, finish = %d, cost = %.6f WHERE id = %d",
 		TableName,
@@ -272,7 +272,7 @@ func UpdateActivity(sqldb *sql.DB, act *activity.Activity, id int) (n int64, err
 	return
 }
 
-func UpdateId(sqldb *sql.DB, oldId, newId int) (n int64, err error) {
+func updateId(sqldb *sql.DB, oldId, newId int) (n int64, err error) {
 	stmt := fmt.Sprintf(
 		"UPDATE %s SET id=%d WHERE id=%d",
 		TableName,
@@ -283,7 +283,7 @@ func UpdateId(sqldb *sql.DB, oldId, newId int) (n int64, err error) {
 	return
 }
 
-func UpdateDescription(sqldb *sql.DB, id int, newDescription string) (n int64, err error) {
+func updateDescription(sqldb *sql.DB, id int, newDescription string) (n int64, err error) {
 	stmt := fmt.Sprintf(
 		"UPDATE %s SET description=%q WHERE id=%d",
 		TableName,
@@ -294,7 +294,7 @@ func UpdateDescription(sqldb *sql.DB, id int, newDescription string) (n int64, e
 	return
 }
 
-func UpdateDuration(sqldb *sql.DB, id int, newDuration time.Duration) (n int64, err error) {
+func updateDuration(sqldb *sql.DB, id int, newDuration time.Duration) (n int64, err error) {
 	stmt := fmt.Sprintf(
 		"UPDATE %s SET duration=%.6f WHERE id=%d",
 		TableName,
@@ -305,7 +305,7 @@ func UpdateDuration(sqldb *sql.DB, id int, newDuration time.Duration) (n int64, 
 	return
 }
 
-func UpdateStart(sqldb *sql.DB, id int, newStart time.Time) (n int64, err error) {
+func updateStart(sqldb *sql.DB, id int, newStart time.Time) (n int64, err error) {
 	stmt := fmt.Sprintf(
 		"UPDATE %s SET start=%d WHERE id=%d",
 		TableName,
@@ -316,7 +316,7 @@ func UpdateStart(sqldb *sql.DB, id int, newStart time.Time) (n int64, err error)
 	return
 }
 
-func UpdateFinish(sqldb *sql.DB, id int, newFinish time.Time) (n int64, err error) {
+func updateFinish(sqldb *sql.DB, id int, newFinish time.Time) (n int64, err error) {
 	stmt := fmt.Sprintf(
 		"UPDATE %s SET finish=%d WHERE id=%d",
 		TableName,
@@ -327,7 +327,7 @@ func UpdateFinish(sqldb *sql.DB, id int, newFinish time.Time) (n int64, err erro
 	return
 }
 
-func UpdatePredecessors(sqldb *sql.DB, id int, newPredecessorsId []int) (n int64, err error) {
+func updatePredecessors(sqldb *sql.DB, id int, newPredecessorsId []int) (n int64, err error) {
 	stmt := fmt.Sprintf(
 		"UPDATE %s SET predecessorsId=%q WHERE id = %d",
 		TableName,
@@ -338,7 +338,7 @@ func UpdatePredecessors(sqldb *sql.DB, id int, newPredecessorsId []int) (n int64
 	return
 }
 
-func UpdateSuccessors(sqldb *sql.DB, id int, newSuccessorsId []int) (n int64, err error) {
+func updateSuccessors(sqldb *sql.DB, id int, newSuccessorsId []int) (n int64, err error) {
 	stmt := fmt.Sprintf(
 		"UPDATE %s SET successorsId=%q WHERE id = %d",
 		TableName,
@@ -349,7 +349,7 @@ func UpdateSuccessors(sqldb *sql.DB, id int, newSuccessorsId []int) (n int64, er
 	return
 }
 
-func UpdateCost(sqldb *sql.DB, id int, newCost float64) (n int64, err error) {
+func updateCost(sqldb *sql.DB, id int, newCost float64) (n int64, err error) {
 	stmt := fmt.Sprintf(
 		"UPDATE %s SET cost=%.6f WHERE id=%d",
 		TableName,
@@ -360,13 +360,13 @@ func UpdateCost(sqldb *sql.DB, id int, newCost float64) (n int64, err error) {
 	return
 }
 
-func DeleteActivity(sqldb *sql.DB, id int) (n int64, err error) {
+func deleteActivity(sqldb *sql.DB, id int) (n int64, err error) {
 	stmt := fmt.Sprintf("DELETE FROM %s WHERE id = %d", TableName, id)
 	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-func DeleteActivities(sqldb *sql.DB, ids []int) (n int64, err error) {
+func deleteActivities(sqldb *sql.DB, ids []int) (n int64, err error) {
 	stmt := fmt.Sprintf("DELETE FROM %s WHERE id IN (%s)", TableName, util.Flat(ids))
 	n, err = execStmt(sqldb, stmt)
 	return
