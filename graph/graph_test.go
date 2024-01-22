@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -73,6 +74,10 @@ func TestGraphToImage(t *testing.T) {
 		g.Close()
 	}()
 	err = GraphToImage(g, graph, graphviz.PNG, "graph.png")
+	if err != nil {
+		t.Error(err)
+	}
+	err = os.Remove("graph.png")
 	if err != nil {
 		t.Error(err)
 	}
