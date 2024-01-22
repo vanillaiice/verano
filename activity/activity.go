@@ -15,6 +15,7 @@ type Activity struct {
 	Finish         time.Time     `json:"finish"`         // Finish time of he activity
 	PredecessorsId []int         `json:"predecessorsId"` // ID of the activities that precede
 	SuccessorsId   []int         `json:"successorsId"`   // ID of the activities that come after
+	Progress       float32       `json:"progress"`       // How complete is the activity (between 0 and 1)
 	Cost           float64       `json:"cost"`           // Cost of the activity
 }
 
