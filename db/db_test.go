@@ -27,7 +27,7 @@ func deleteDB() error {
 	return nil
 }
 
-func insertActivity(sqldb *DB, descr string) error {
+func insertActivityUtil(sqldb *DB, descr string) error {
 	start := time.Date(2024, 12, 31, 18, 0, 0, 0, time.Local)
 	duration := 1 * time.Hour
 	activity := &activity.Activity{
@@ -59,7 +59,7 @@ func TestInsertActivity(t *testing.T) {
 		t.Error(err)
 	}
 	defer sqldb.DB.Close()
-	err = insertActivity(sqldb, "tip your landlord")
+	err = insertActivityUtil(sqldb, "tip your landlord")
 	if err != nil {
 		t.Error(err)
 	}
@@ -102,7 +102,7 @@ func TestGetActivities(t *testing.T) {
 	descr := "tip your landlord"
 	descr2 := "tip your landlord even more"
 
-	err = insertActivity(sqldb, descr2)
+	err = insertActivityUtil(sqldb, descr2)
 	if err != nil {
 		t.Error(err)
 	}
@@ -222,7 +222,7 @@ func TestDeleteActivities(t *testing.T) {
 	}
 	defer sqldb.DB.Close()
 
-	err = insertActivity(sqldb, "tip your landlord")
+	err = insertActivityUtil(sqldb, "tip your landlord")
 	if err != nil {
 		t.Error(err)
 	}
@@ -242,7 +242,7 @@ func TestDeleteActivities(t *testing.T) {
 }
 
 func TestInsertActivities(t *testing.T) {
-	sqldb, err := Open("test.db")
+	sqldb, err := open("test.db")
 	if err != nil {
 		t.Error(err)
 	}
@@ -281,7 +281,7 @@ func TestInsertActivities(t *testing.T) {
 		},
 	}
 
-	err = InsertActivities(sqldb, activities)
+	err = insertActivities(sqldb, activities)
 	if err != nil {
 		t.Error(err)
 	}
