@@ -2,150 +2,384 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/vanillaiice/verano/activity"
-	_ "modernc.org/sqlite"
+	"github.com/vanillaiice/verano/util"
 )
 
-// TableName is the name of the table in the sqlite database.
-const TableName = "activities"
-
-// DuplicateInsertPolicy defines the policy for handling duplicate inserts in a database.
-type DuplicateInsertPolicy int
-
-// Enumeration of available duplicate insert policies.
-const (
-	Ignore  DuplicateInsertPolicy = 0 // Ignore duplicate inserts
-	Replace DuplicateInsertPolicy = 1 // Replace duplicate inserts
-)
-
-// A DB stores a pointer to a sqlite database connection.
-type DB struct {
-	DB *sql.DB
+func open(path string) (sqldb *sql.DB, err error) {
+	sqldb, err = sql.Open("sqlite", path)
+	if err != nil {
+		return
+	}
+	stmt := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s(id INTEGER PRIMARY KEY, description TEXT, duration REAL, predecessorsId TEXT, successorsId TEXT, start INTEGER, finish INTEGER, cost REAL)", TableName)
+	_, err = execStmt(sqldb, stmt)
+	return
 }
 
-// New creates a new instance of the DB type by initializing and opening a database.
-// located at the specified 'path'. It returns a pointer to the created DB and an error, if any.
-// The returned DB is ready for use, and the associated database file is opened.
-// It should be noted that the DB connection should be closed after use.
-func New(path string) (*DB, error) {
-	var (
-		db  DB
-		err error
+func insertActivity(sqldb *sql.DB, act *activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (n int64, err error) {
+	if len(duplicateInsertPolicy) > 1 {
+		return n, fmt.Errorf("expected exactly one argument for duplicateInsertPolicy")
+	}
+	stmt := "INSERT "
+	if len(duplicateInsertPolicy) > 0 {
+		switch duplicateInsertPolicy[0] {
+		case Ignore:
+			stmt += "or IGNORE "
+		case Replace:
+			stmt += "or REPLACE "
+		}
+	}
+
+	stmt += fmt.Sprintf(
+		"INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(%d, %q, %.6f, %q, %q, %d, %d, %.6f)",
+		TableName,
+		act.Id,
+		act.Description,
+		act.Duration.Seconds(),
+		util.Flat(act.PredecessorsId),
+		util.Flat(act.SuccessorsId),
+		act.Start.Unix(),
+		act.Finish.Unix(),
+		act.Cost,
 	)
-	db.DB, err = open(path)
-	return &db, err
-}
-
-// Close closes the db connection
-func Close(db *DB) error {
-	return db.DB.Close()
-}
-
-// InsertActivity inserts the provided activity into the database.
-func (db *DB) InsertActivity(act *activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (n int64, err error) {
-	n, err = insertActivity(db.DB, act, duplicateInsertPolicy...)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// InsertActivities inserts the provided activities into the database.
-func (db *DB) InsertActivities(activities []*activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (err error) {
-	err = insertActivities(db.DB, activities, duplicateInsertPolicy...)
+func insertActivities(sqldb *sql.DB, activities []*activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (err error) {
+	if len(duplicateInsertPolicy) > 1 {
+		return fmt.Errorf("expected exactly one argument for duplicateInsertPolicy")
+	}
+	sStmt := "INSERT "
+	if len(duplicateInsertPolicy) > 0 {
+		switch duplicateInsertPolicy[0] {
+		case Ignore:
+			sStmt += "or IGNORE "
+		case Replace:
+			sStmt += "or REPLACE "
+		}
+	}
+	sStmt += fmt.Sprintf("INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(?, ?, ?, ?, ?, ?, ?, ?)", TableName)
+
+	stmt, err := sqldb.Prepare(sStmt)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	for _, a := range activities {
+		_, err = stmt.Exec(
+			a.Id,
+			a.Description,
+			a.Duration.Seconds(),
+			util.Flat(a.PredecessorsId),
+			util.Flat(a.SuccessorsId),
+			a.Start.Unix(),
+			a.Finish.Unix(),
+			a.Cost,
+		)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 
-// GetActivity retrieves the activity with the specified id from the database.
-func (db *DB) GetActivity(id int) (act *activity.Activity, err error) {
-	act, err = getActivity(db.DB, id)
+func getActivity(sqldb *sql.DB, id int) (act *activity.Activity, err error) {
+	stmt, err := sqldb.Prepare(fmt.Sprintf("SELECT description, duration, predecessorsId, successorsId, start, finish, cost FROM %s WHERE id = ?", TableName))
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	var description, predecessorsId, successorsId string
+	var duration, cost float64
+	var start, finish int64
+	err = stmt.QueryRow(id).Scan(&description, &duration, &predecessorsId, &successorsId, &start, &finish, &cost)
+	if err != nil && err != sql.ErrNoRows {
+		return
+	}
+
+	pIds, err := util.Unflat(predecessorsId)
+	if err != nil {
+		return
+	}
+	sIds, err := util.Unflat(successorsId)
+	if err != nil {
+		return
+	}
+
+	act = &activity.Activity{
+		Id:             id,
+		Description:    description,
+		Duration:       time.Duration(duration * float64(time.Second)),
+		PredecessorsId: pIds,
+		SuccessorsId:   sIds,
+		Start:          time.Unix(start, 0),
+		Finish:         time.Unix(finish, 0),
+		Cost:           cost,
+	}
+
 	return
 }
 
-// GetActivities retrieves the activities with the specified ids from the database.
-func (db *DB) GetActivities(ids []int) (activities []*activity.Activity, err error) {
-	activities, err = getActivities(db.DB, ids)
+func getActivities(sqldb *sql.DB, ids []int) (activities []*activity.Activity, err error) {
+	stmt := fmt.Sprintf("SELECT * FROM %s WHERE id IN (%s)", TableName, util.Flat(ids))
+	rows, err := sqldb.Query(stmt)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	var description, predecessorsId, successorsId string
+	var duration, cost float64
+	var start, finish int64
+	var id int
+	for rows.Next() {
+		err = rows.Scan(&id, &description, &duration, &predecessorsId, &successorsId, &start, &finish, &cost)
+		if err != nil {
+			return
+		}
+
+		pIds, err := util.Unflat(predecessorsId)
+		if err != nil {
+			return activities, err
+		}
+		sIds, err := util.Unflat(successorsId)
+		if err != nil {
+			return activities, err
+		}
+
+		activities = append(activities, &activity.Activity{
+			Id:             id,
+			Description:    description,
+			Duration:       time.Duration(duration * float64(time.Second)),
+			PredecessorsId: pIds,
+			SuccessorsId:   sIds,
+			Start:          time.Unix(start, 0),
+			Finish:         time.Unix(finish, 0),
+			Cost:           cost,
+		})
+	}
+
 	return
 }
 
-// GetActivitiesAll retrieves all activities from the database.
-// It returns a slice of pointers to activities.
-func (db *DB) GetActivitiesAll() (activities []*activity.Activity, err error) {
-	activities, err = getActivitiesAll(db.DB)
+func getActivitiesAll(sqldb *sql.DB) (activities []*activity.Activity, err error) {
+	stmt := fmt.Sprintf("SELECT * FROM %s", TableName)
+	rows, err := sqldb.Query(stmt)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	var description, predecessorsId, successorsId string
+	var duration, cost float64
+	var start, finish int64
+	var id int
+	for rows.Next() {
+		err = rows.Scan(&id, &description, &duration, &predecessorsId, &successorsId, &start, &finish, &cost)
+		if err != nil {
+			return activities, err
+		}
+
+		pIds, err := util.Unflat(predecessorsId)
+		if err != nil {
+			return activities, err
+		}
+		sIds, err := util.Unflat(successorsId)
+		if err != nil {
+			return activities, err
+		}
+
+		activities = append(
+			activities,
+			&activity.Activity{
+				Id:             id,
+				Description:    description,
+				Duration:       time.Duration(duration * float64(time.Second)),
+				PredecessorsId: pIds,
+				SuccessorsId:   sIds,
+				Start:          time.Unix(start, 0),
+				Finish:         time.Unix(finish, 0),
+				Cost:           cost,
+			})
+	}
+
 	return
 }
 
-// GetActivitiesAllMap retrieves all activities from the database,
-// and returns them as a map with activity ids as keys and pointers to activities as values.
-func (db *DB) GetActivitiesAllMap() (activitiesMap map[int]*activity.Activity, err error) {
-	activitiesMap, err = getActivitiesAllMap(db.DB)
+func getActivitiesAllMap(sqldb *sql.DB) (activitiesMap map[int]*activity.Activity, err error) {
+	stmt := fmt.Sprintf("SELECT * FROM %s", TableName)
+	rows, err := sqldb.Query(stmt)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	var description, predecessorsId, successorsId string
+	var duration, cost float64
+	var start, finish int64
+	var id int
+	for rows.Next() {
+		err = rows.Scan(&id, &description, &duration, &predecessorsId, &successorsId, &start, &finish)
+		if err != nil {
+			return activitiesMap, err
+		}
+
+		pIds, err := util.Unflat(predecessorsId)
+		if err != nil {
+			return activitiesMap, err
+		}
+		sIds, err := util.Unflat(successorsId)
+		if err != nil {
+			return activitiesMap, err
+		}
+
+		activitiesMap[id] = &activity.Activity{
+			Id:             id,
+			Description:    description,
+			Duration:       time.Duration(duration * float64(time.Second)),
+			PredecessorsId: pIds,
+			SuccessorsId:   sIds,
+			Start:          time.Unix(start, 0),
+			Finish:         time.Unix(finish, 0),
+			Cost:           cost,
+		}
+	}
+
 	return
 }
 
-// UpdateActivity updates the activity with the specified id in the database
-// using the information provided in the activity.
-func (db *DB) UpdateActivity(act *activity.Activity, id int) (n int64, err error) {
-	n, err = updateActivity(db.DB, act, id)
+func updateActivity(sqldb *sql.DB, act *activity.Activity, id int) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET description = %q, duration = %.6f, predecessorsId=%q, successorsId=%q, start = %d, finish = %d, cost = %.6f WHERE id = %d",
+		TableName,
+		act.Description,
+		act.Duration.Seconds(),
+		util.Flat(act.PredecessorsId),
+		util.Flat(act.SuccessorsId),
+		act.Start.Unix(),
+		act.Finish.Unix(),
+		act.Cost,
+		id,
+	)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// UpdateId updates the id of an activity with the specified id in the database
-func (db *DB) UpdateId(oldId, newId int) (n int64, err error) {
-	n, err = updateId(db.DB, oldId, newId)
+func updateId(sqldb *sql.DB, oldId, newId int) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET id=%d WHERE id=%d",
+		TableName,
+		newId,
+		oldId,
+	)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// UpdateDescription updates the description of an activity with the specified id in the database
-func (db *DB) UpdateDescription(id int, newDescription string) (n int64, err error) {
-	n, err = updateDescription(db.DB, id, newDescription)
+func updateDescription(sqldb *sql.DB, id int, newDescription string) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET description=%q WHERE id=%d",
+		TableName,
+		newDescription,
+		id,
+	)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// UpdateDuration updates the duration of an activity with the specified id in the database
-func (db *DB) UpdateDuration(id int, newDuration time.Duration) (n int64, err error) {
-	n, err = updateDuration(db.DB, id, newDuration)
+func updateDuration(sqldb *sql.DB, id int, newDuration time.Duration) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET duration=%.6f WHERE id=%d",
+		TableName,
+		newDuration.Seconds(),
+		id,
+	)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// UpdateStart updates the start time of an activity with the specified id in the database
-func (db *DB) UpdateStart(id int, newStart time.Time) (n int64, err error) {
-	n, err = updateStart(db.DB, id, newStart)
+func updateStart(sqldb *sql.DB, id int, newStart time.Time) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET start=%d WHERE id=%d",
+		TableName,
+		newStart.Unix(),
+		id,
+	)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// UpdateFinish updates the finish time of an activity with the specified id in the database
-func (db *DB) UpdateFinish(id int, newFinish time.Time) (n int64, err error) {
-	n, err = updateFinish(db.DB, id, newFinish)
+func updateFinish(sqldb *sql.DB, id int, newFinish time.Time) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET finish=%d WHERE id=%d",
+		TableName,
+		newFinish.Unix(),
+		id,
+	)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// UpdateSuccessors updates the successors of the activity with the specified id in the database.
-func (db *DB) UpdateSuccessors(id int, successorsId []int) (n int64, err error) {
-	n, err = updateSuccessors(db.DB, id, successorsId)
+func updatePredecessors(sqldb *sql.DB, id int, newPredecessorsId []int) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET predecessorsId=%q WHERE id = %d",
+		TableName,
+		util.Flat(newPredecessorsId),
+		id,
+	)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// UpdateCost updates the cost of an activity with the specified id in the database
-func (db *DB) UpdateCost(id int, newCost float64) (n int64, err error) {
-	n, err = updateCost(db.DB, id, newCost)
+func updateSuccessors(sqldb *sql.DB, id int, newSuccessorsId []int) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET successorsId=%q WHERE id = %d",
+		TableName,
+		util.Flat(newSuccessorsId),
+		id,
+	)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// UpdatePredecessors updates the predecessors of the activity with the specified id in the database.
-func (db *DB) UpdatePredecessors(id int, predecessorsId []int) (n int64, err error) {
-	n, err = updatePredecessors(db.DB, id, predecessorsId)
+func updateCost(sqldb *sql.DB, id int, newCost float64) (n int64, err error) {
+	stmt := fmt.Sprintf(
+		"UPDATE %s SET cost=%.6f WHERE id=%d",
+		TableName,
+		newCost,
+		id,
+	)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// DeleteActivity deletes the activity with the specified id from the database.
-// It returns the number of affected rows and an error if the deletion operation encounters any issues.
-func (db *DB) DeleteActivity(id int) (n int64, err error) {
-	n, err = deleteActivity(db.DB, id)
+func deleteActivity(sqldb *sql.DB, id int) (n int64, err error) {
+	stmt := fmt.Sprintf("DELETE FROM %s WHERE id = %d", TableName, id)
+	n, err = execStmt(sqldb, stmt)
 	return
 }
 
-// DeleteActivities deletes the activities with the specified ids from the database.
-// It returns the number of affected rows and an error if the deletion operation encounters any issues.
-func (db *DB) DeleteActivities(ids []int) (n int64, err error) {
-	n, err = deleteActivities(db.DB, ids)
+func deleteActivities(sqldb *sql.DB, ids []int) (n int64, err error) {
+	stmt := fmt.Sprintf("DELETE FROM %s WHERE id IN (%s)", TableName, util.Flat(ids))
+	n, err = execStmt(sqldb, stmt)
+	return
+}
+
+func execStmt(sqldb *sql.DB, stmt string) (n int64, err error) {
+	res, err := sqldb.Exec(stmt)
+	if err != nil {
+		return
+	}
+	n, err = res.RowsAffected()
+	if err != nil {
+		return
+	}
 	return
 }
