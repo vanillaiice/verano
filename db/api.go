@@ -8,18 +8,6 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// TableName is the name of the table in the sqlite database.
-const TableName = "activities"
-
-// DuplicateInsertPolicy defines the policy for handling duplicate inserts in a database.
-type DuplicateInsertPolicy int
-
-// Enumeration of available duplicate insert policies.
-const (
-	Ignore  DuplicateInsertPolicy = 0 // Ignore duplicate inserts
-	Replace DuplicateInsertPolicy = 1 // Replace duplicate inserts
-)
-
 // A DB stores a pointer to a sqlite database connection.
 type DB struct {
 	DB *sql.DB
@@ -44,108 +32,91 @@ func Close(db *DB) error {
 }
 
 // InsertActivity inserts the provided activity into the database.
-func (db *DB) InsertActivity(act *activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (n int64, err error) {
-	n, err = insertActivity(db.DB, act, duplicateInsertPolicy...)
-	return
+func (db *DB) InsertActivity(act *activity.Activity, duplicateInsertPolicy DuplicateInsertPolicy) (n int64, err error) {
+	return insertActivity(db.DB, act, duplicateInsertPolicy)
 }
 
 // InsertActivities inserts the provided activities into the database.
-func (db *DB) InsertActivities(activities []*activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (err error) {
-	err = insertActivities(db.DB, activities, duplicateInsertPolicy...)
-	return
+func (db *DB) InsertActivities(activities []*activity.Activity, duplicateInsertPolicy DuplicateInsertPolicy) (err error) {
+	return insertActivities(db.DB, activities, duplicateInsertPolicy)
 }
 
 // GetActivity retrieves the activity with the specified id from the database.
 func (db *DB) GetActivity(id int) (act *activity.Activity, err error) {
-	act, err = getActivity(db.DB, id)
-	return
+	return getActivity(db.DB, id)
 }
 
 // GetActivities retrieves the activities with the specified ids from the database.
 func (db *DB) GetActivities(ids []int) (activities []*activity.Activity, err error) {
-	activities, err = getActivities(db.DB, ids)
-	return
+	return getActivities(db.DB, ids)
 }
 
 // GetActivitiesAll retrieves all activities from the database.
 // It returns a slice of pointers to activities.
 func (db *DB) GetActivitiesAll() (activities []*activity.Activity, err error) {
-	activities, err = getActivitiesAll(db.DB)
-	return
+	return getActivitiesAll(db.DB)
 }
 
 // GetActivitiesAllMap retrieves all activities from the database,
 // and returns them as a map with activity ids as keys and pointers to activities as values.
 func (db *DB) GetActivitiesAllMap() (activitiesMap map[int]*activity.Activity, err error) {
-	activitiesMap, err = getActivitiesAllMap(db.DB)
-	return
+	return getActivitiesAllMap(db.DB)
 }
 
 // UpdateActivity updates the activity with the specified id in the database
 // using the information provided in the activity.
 func (db *DB) UpdateActivity(act *activity.Activity, id int) (n int64, err error) {
-	n, err = updateActivity(db.DB, act, id)
-	return
+	return updateActivity(db.DB, act, id)
 }
 
 // UpdateId updates the id of an activity with the specified id in the database
 func (db *DB) UpdateId(oldId, newId int) (n int64, err error) {
-	n, err = updateId(db.DB, oldId, newId)
-	return
+	return updateId(db.DB, oldId, newId)
 }
 
 // UpdateDescription updates the description of an activity with the specified id in the database
 func (db *DB) UpdateDescription(id int, newDescription string) (n int64, err error) {
-	n, err = updateDescription(db.DB, id, newDescription)
-	return
+	return updateDescription(db.DB, id, newDescription)
 }
 
 // UpdateDuration updates the duration of an activity with the specified id in the database
 func (db *DB) UpdateDuration(id int, newDuration time.Duration) (n int64, err error) {
-	n, err = updateDuration(db.DB, id, newDuration)
-	return
+	return updateDuration(db.DB, id, newDuration)
 }
 
 // UpdateStart updates the start time of an activity with the specified id in the database
 func (db *DB) UpdateStart(id int, newStart time.Time) (n int64, err error) {
-	n, err = updateStart(db.DB, id, newStart)
-	return
+	return updateStart(db.DB, id, newStart)
 }
 
 // UpdateFinish updates the finish time of an activity with the specified id in the database
 func (db *DB) UpdateFinish(id int, newFinish time.Time) (n int64, err error) {
-	n, err = updateFinish(db.DB, id, newFinish)
-	return
+	return updateFinish(db.DB, id, newFinish)
 }
 
 // UpdateSuccessors updates the successors of the activity with the specified id in the database.
 func (db *DB) UpdateSuccessors(id int, successorsId []int) (n int64, err error) {
-	n, err = updateSuccessors(db.DB, id, successorsId)
-	return
+	return updateSuccessors(db.DB, id, successorsId)
 }
 
 // UpdateCost updates the cost of an activity with the specified id in the database
 func (db *DB) UpdateCost(id int, newCost float64) (n int64, err error) {
-	n, err = updateCost(db.DB, id, newCost)
-	return
+	return updateCost(db.DB, id, newCost)
 }
 
 // UpdatePredecessors updates the predecessors of the activity with the specified id in the database.
 func (db *DB) UpdatePredecessors(id int, predecessorsId []int) (n int64, err error) {
-	n, err = updatePredecessors(db.DB, id, predecessorsId)
-	return
+	return updatePredecessors(db.DB, id, predecessorsId)
 }
 
 // DeleteActivity deletes the activity with the specified id from the database.
 // It returns the number of affected rows and an error if the deletion operation encounters any issues.
 func (db *DB) DeleteActivity(id int) (n int64, err error) {
-	n, err = deleteActivity(db.DB, id)
-	return
+	return deleteActivity(db.DB, id)
 }
 
 // DeleteActivities deletes the activities with the specified ids from the database.
 // It returns the number of affected rows and an error if the deletion operation encounters any issues.
 func (db *DB) DeleteActivities(ids []int) (n int64, err error) {
-	n, err = deleteActivities(db.DB, ids)
-	return
+	return deleteActivities(db.DB, ids)
 }

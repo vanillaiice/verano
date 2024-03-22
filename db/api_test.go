@@ -37,7 +37,7 @@ func insertActivityUtil(sqldb *DB, descr string) error {
 		Start:       start,
 		Finish:      finish,
 	}
-	_, err := sqldb.InsertActivity(activity)
+	_, err := sqldb.InsertActivity(activity, None)
 	if err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func TestInsertActivities(t *testing.T) {
 		},
 	}
 
-	err = insertActivities(sqldb, activities)
+	err = insertActivities(sqldb, activities, None)
 	if err != nil {
 		t.Error(err)
 	}

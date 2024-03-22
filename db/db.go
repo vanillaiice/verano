@@ -9,6 +9,19 @@ import (
 	"github.com/vanillaiice/verano/util"
 )
 
+// TableName is the name of the table in the sqlite database.
+const TableName = "activities"
+
+// DuplicateInsertPolicy defines the policy for handling duplicate inserts in a database.
+type DuplicateInsertPolicy int
+
+// Enumeration of available duplicate insert policies.
+const (
+	None    DuplicateInsertPolicy = 0 // Do nothing
+	Ignore  DuplicateInsertPolicy = 1 // Ignore duplicate inserts
+	Replace DuplicateInsertPolicy = 2 // Replace duplicate inserts
+)
+
 func open(path string) (sqldb *sql.DB, err error) {
 	sqldb, err = sql.Open("sqlite", path)
 	if err != nil {
@@ -19,18 +32,13 @@ func open(path string) (sqldb *sql.DB, err error) {
 	return
 }
 
-func insertActivity(sqldb *sql.DB, act *activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (n int64, err error) {
-	if len(duplicateInsertPolicy) > 1 {
-		return n, fmt.Errorf("expected exactly one argument for duplicateInsertPolicy")
-	}
+func insertActivity(sqldb *sql.DB, act *activity.Activity, duplicateInsertPolicy DuplicateInsertPolicy) (n int64, err error) {
 	stmt := "INSERT "
-	if len(duplicateInsertPolicy) > 0 {
-		switch duplicateInsertPolicy[0] {
-		case Ignore:
-			stmt += "or IGNORE "
-		case Replace:
-			stmt += "or REPLACE "
-		}
+	switch duplicateInsertPolicy {
+	case Ignore:
+		stmt += "or IGNORE "
+	case Replace:
+		stmt += "or REPLACE "
 	}
 
 	stmt += fmt.Sprintf(
@@ -45,26 +53,21 @@ func insertActivity(sqldb *sql.DB, act *activity.Activity, duplicateInsertPolicy
 		act.Finish.Unix(),
 		act.Cost,
 	)
-	n, err = execStmt(sqldb, stmt)
-	return
+
+	return execStmt(sqldb, stmt)
 }
 
-func insertActivities(sqldb *sql.DB, activities []*activity.Activity, duplicateInsertPolicy ...DuplicateInsertPolicy) (err error) {
-	if len(duplicateInsertPolicy) > 1 {
-		return fmt.Errorf("expected exactly one argument for duplicateInsertPolicy")
+func insertActivities(sqldb *sql.DB, activities []*activity.Activity, duplicateInsertPolicy DuplicateInsertPolicy) (err error) {
+	s := "INSERT "
+	switch duplicateInsertPolicy {
+	case Ignore:
+		s += "or IGNORE "
+	case Replace:
+		s += "or REPLACE "
 	}
-	sStmt := "INSERT "
-	if len(duplicateInsertPolicy) > 0 {
-		switch duplicateInsertPolicy[0] {
-		case Ignore:
-			sStmt += "or IGNORE "
-		case Replace:
-			sStmt += "or REPLACE "
-		}
-	}
-	sStmt += fmt.Sprintf("INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(?, ?, ?, ?, ?, ?, ?, ?)", TableName)
+	s += fmt.Sprintf("INTO %s(id, description, duration, predecessorsId, successorsId, start, finish, cost) VALUES(?, ?, ?, ?, ?, ?, ?, ?)", TableName)
 
-	stmt, err := sqldb.Prepare(sStmt)
+	stmt, err := sqldb.Prepare(s)
 	if err != nil {
 		return
 	}
@@ -268,8 +271,7 @@ func updateActivity(sqldb *sql.DB, act *activity.Activity, id int) (n int64, err
 		act.Cost,
 		id,
 	)
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func updateId(sqldb *sql.DB, oldId, newId int) (n int64, err error) {
@@ -279,8 +281,7 @@ func updateId(sqldb *sql.DB, oldId, newId int) (n int64, err error) {
 		newId,
 		oldId,
 	)
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func updateDescription(sqldb *sql.DB, id int, newDescription string) (n int64, err error) {
@@ -290,8 +291,7 @@ func updateDescription(sqldb *sql.DB, id int, newDescription string) (n int64, e
 		newDescription,
 		id,
 	)
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func updateDuration(sqldb *sql.DB, id int, newDuration time.Duration) (n int64, err error) {
@@ -301,8 +301,7 @@ func updateDuration(sqldb *sql.DB, id int, newDuration time.Duration) (n int64, 
 		newDuration.Seconds(),
 		id,
 	)
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func updateStart(sqldb *sql.DB, id int, newStart time.Time) (n int64, err error) {
@@ -312,8 +311,7 @@ func updateStart(sqldb *sql.DB, id int, newStart time.Time) (n int64, err error)
 		newStart.Unix(),
 		id,
 	)
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func updateFinish(sqldb *sql.DB, id int, newFinish time.Time) (n int64, err error) {
@@ -323,8 +321,7 @@ func updateFinish(sqldb *sql.DB, id int, newFinish time.Time) (n int64, err erro
 		newFinish.Unix(),
 		id,
 	)
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func updatePredecessors(sqldb *sql.DB, id int, newPredecessorsId []int) (n int64, err error) {
@@ -334,8 +331,7 @@ func updatePredecessors(sqldb *sql.DB, id int, newPredecessorsId []int) (n int64
 		util.Flat(newPredecessorsId),
 		id,
 	)
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func updateSuccessors(sqldb *sql.DB, id int, newSuccessorsId []int) (n int64, err error) {
@@ -345,8 +341,7 @@ func updateSuccessors(sqldb *sql.DB, id int, newSuccessorsId []int) (n int64, er
 		util.Flat(newSuccessorsId),
 		id,
 	)
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func updateCost(sqldb *sql.DB, id int, newCost float64) (n int64, err error) {
@@ -356,20 +351,17 @@ func updateCost(sqldb *sql.DB, id int, newCost float64) (n int64, err error) {
 		newCost,
 		id,
 	)
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func deleteActivity(sqldb *sql.DB, id int) (n int64, err error) {
 	stmt := fmt.Sprintf("DELETE FROM %s WHERE id = %d", TableName, id)
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func deleteActivities(sqldb *sql.DB, ids []int) (n int64, err error) {
 	stmt := fmt.Sprintf("DELETE FROM %s WHERE id IN (%s)", TableName, util.Flat(ids))
-	n, err = execStmt(sqldb, stmt)
-	return
+	return execStmt(sqldb, stmt)
 }
 
 func execStmt(sqldb *sql.DB, stmt string) (n int64, err error) {
@@ -377,9 +369,5 @@ func execStmt(sqldb *sql.DB, stmt string) (n int64, err error) {
 	if err != nil {
 		return
 	}
-	n, err = res.RowsAffected()
-	if err != nil {
-		return
-	}
-	return
+	return res.RowsAffected()
 }
