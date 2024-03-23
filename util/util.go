@@ -24,16 +24,14 @@ func ActivitiesToMap(activities []*activity.Activity) (activitiesMap map[int]*ac
 func ActivitiesToGraph(activities []*activity.Activity) (g *dag.DAG, err error) {
 	g = dag.NewDAG()
 	for _, act := range activities {
-		err = g.AddVertexByID(fmt.Sprint(act.Id), act)
-		if err != nil {
-			return g, err
+		if err = g.AddVertexByID(fmt.Sprint(act.Id), act); err != nil {
+			return
 		}
 	}
 	for _, act := range activities {
 		for _, successorId := range act.SuccessorsId {
-			err = g.AddEdge(fmt.Sprint(act.Id), fmt.Sprint(successorId))
-			if err != nil {
-				return g, err
+			if err = g.AddEdge(fmt.Sprint(act.Id), fmt.Sprint(successorId)); err != nil {
+				return
 			}
 		}
 	}

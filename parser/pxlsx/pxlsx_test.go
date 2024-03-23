@@ -63,7 +63,7 @@ func TestExportToDb(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	err = ExportToDb(sqldb, sheet)
+	err = ExportToDb(sqldb, sheet, db.None)
 	if err != nil {
 		t.Error(err)
 	}

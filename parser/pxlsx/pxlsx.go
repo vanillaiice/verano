@@ -9,22 +9,21 @@ import (
 	"github.com/vanillaiice/verano/util"
 )
 
+var tableHeader = []string{"Id", "Description", "Duration", "Start", "Finish", "PredecessorsId", "SuccessorsId", "Cost"}
+
 // ExportToDb populates the database with activities in xlsx format.
-func ExportToDb(sqldb *db.DB, sheet *xlsx.Sheet, duplicateInsertPolicy ...db.DuplicateInsertPolicy) (err error) {
+func ExportToDb(sqldb *db.DB, sheet *xlsx.Sheet, duplicateInsertPolicy db.DuplicateInsertPolicy) (err error) {
 	activities, err := XLSXToActivities(sheet)
 	if err != nil {
 		return
 	}
-
-	err = sqldb.InsertActivities(activities, duplicateInsertPolicy...)
-	return
+	return sqldb.InsertActivities(activities, duplicateInsertPolicy)
 }
 
 // ActivitiesToXLSX converts a slice of activities to xlsx format.
 func ActivitiesToXLSX(activities []*activity.Activity, sheet *xlsx.Sheet) {
 	row := sheet.AddRow()
-	header := []string{"Id", "Description", "Duration", "Start", "Finish", "PredecessorsId", "SuccessorsId", "Cost"}
-	for _, h := range header {
+	for _, h := range tableHeader {
 		c := row.AddCell()
 		c.SetString(h)
 		row.PushCell(c)

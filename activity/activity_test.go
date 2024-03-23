@@ -6,10 +6,8 @@ import (
 	"time"
 )
 
-var activity = &Activity{Id: 69, Description: "Testing", Duration: time.Hour, Start: time.Now(), Finish: time.Now(), PredecessorsId: []int{1, 2, 3}, SuccessorsId: []int{4, 5, 6}, Cost: 1000}
-
 func TestAddPredecessor(t *testing.T) {
-	temp := *activity
+	temp := Activity{Id: 69, Description: "Testing", Duration: time.Hour, Start: time.Now(), Finish: time.Now(), PredecessorsId: []int{1, 2, 3}, SuccessorsId: []int{4, 5, 6}, Cost: 1000}
 	err := temp.AddPredecessor(7)
 	if err != nil {
 		t.Error(err)
@@ -25,7 +23,7 @@ func TestAddPredecessor(t *testing.T) {
 }
 
 func TestAddSuccessor(t *testing.T) {
-	temp := *activity
+	temp := Activity{Id: 69, Description: "Testing", Duration: time.Hour, Start: time.Now(), Finish: time.Now(), PredecessorsId: []int{1, 2, 3}, SuccessorsId: []int{4, 5, 6}, Cost: 1000}
 	err := temp.AddSuccessor(8)
 	if err != nil {
 		t.Error(err)
@@ -41,7 +39,7 @@ func TestAddSuccessor(t *testing.T) {
 }
 
 func TestRemovePredecessor(t *testing.T) {
-	temp := *activity
+	temp := Activity{Id: 69, Description: "Testing", Duration: time.Hour, Start: time.Now(), Finish: time.Now(), PredecessorsId: []int{1, 2, 3}, SuccessorsId: []int{4, 5, 6}, Cost: 1000}
 	err := temp.RemovePredecessor(3)
 	if err != nil {
 		t.Error(err)
@@ -57,7 +55,7 @@ func TestRemovePredecessor(t *testing.T) {
 }
 
 func TestRemoveSuccessor(t *testing.T) {
-	temp := *activity
+	temp := Activity{Id: 69, Description: "Testing", Duration: time.Hour, Start: time.Now(), Finish: time.Now(), PredecessorsId: []int{1, 2, 3}, SuccessorsId: []int{4, 5, 6}, Cost: 1000}
 	err := temp.RemoveSuccessor(6)
 	if err != nil {
 		t.Error(err)
@@ -73,7 +71,7 @@ func TestRemoveSuccessor(t *testing.T) {
 }
 
 func TestUpdatePredecessorId(t *testing.T) {
-	temp := *activity
+	temp := Activity{Id: 69, Description: "Testing", Duration: time.Hour, Start: time.Now(), Finish: time.Now(), PredecessorsId: []int{1, 2, 3}, SuccessorsId: []int{4, 5, 6}, Cost: 1000}
 	err := temp.UpdatePredecessorId(3, 33)
 	if err != nil {
 		t.Error(err)
@@ -89,7 +87,7 @@ func TestUpdatePredecessorId(t *testing.T) {
 }
 
 func TestUpdateSuccessorId(t *testing.T) {
-	temp := *activity
+	temp := Activity{Id: 69, Description: "Testing", Duration: time.Hour, Start: time.Now(), Finish: time.Now(), PredecessorsId: []int{1, 2, 3}, SuccessorsId: []int{4, 5, 6}, Cost: 1000}
 	err := temp.UpdateSuccessorId(6, 66)
 	if err != nil {
 		t.Error(err)

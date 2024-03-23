@@ -12,27 +12,27 @@ import (
 	"github.com/vanillaiice/verano/util"
 )
 
+var recordHeader = []string{"Id", "Description", "Duration", "Start", "Finish", "PredecessorsId", "SuccessorsId", "Cost"}
+
 // ExportToDb populates the database with activities in csv format.
-func ExportToDb(sqldb *db.DB, reader io.Reader, duplicateInsertPolicy ...db.DuplicateInsertPolicy) (err error) {
+func ExportToDb(sqldb *db.DB, reader io.Reader, duplicateInsertPolicy db.DuplicateInsertPolicy) (err error) {
 	activities, err := CSVToActivities(reader)
 	if err != nil {
 		return
 	}
-	err = sqldb.InsertActivities(activities, duplicateInsertPolicy...)
-	return
+	return sqldb.InsertActivities(activities, duplicateInsertPolicy)
 }
 
 // ActivitiesToCSV converts a slice of activities to csv format.
 func ActivitiesToCSV(activities []*activity.Activity, w io.Writer) (err error) {
 	var records [][]string
-	records = append(records, []string{"Id", "Description", "Duration", "Start", "Finish", "PredecessorsId", "SuccessorsId", "Cost"})
+	records = append(records, recordHeader)
 	for _, act := range activities {
 		records = append(records, activityToRecord(act))
 	}
 	writer := csv.NewWriter(w)
 	defer writer.Flush()
-	err = writer.WriteAll(records)
-	return
+	return writer.WriteAll(records)
 }
 
 // CSVToActivities converts csv format to a slice of activities.

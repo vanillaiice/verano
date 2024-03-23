@@ -16,15 +16,13 @@ const timeFormat = "2 Jan 2006 15:04"
 func DrawAndRender(graph *graphviz.Graphviz, activitiesMap map[int]*activity.Activity, format graphviz.Format, filename string) (err error) {
 	g, err := graph.Graph()
 	if err != nil {
-		return err
+		return
 	}
 	defer g.Close()
-	err = Draw(g, activitiesMap)
-	if err != nil {
-		return err
+	if err = Draw(g, activitiesMap); err != nil {
+		return
 	}
-	err = GraphToImage(graph, g, format, filename)
-	return err
+	return GraphToImage(graph, g, format, filename)
 }
 
 // Draw draws a graphviz graph from a map of activities.
@@ -49,8 +47,7 @@ func Draw(graph *cgraph.Graph, activities map[int]*activity.Activity) (err error
 			if err != nil {
 				return err
 			}
-			_, err = graph.CreateEdge("", node, node2)
-			if err != nil {
+			if _, err = graph.CreateEdge("", node, node2); err != nil {
 				return err
 			}
 		}
@@ -60,6 +57,5 @@ func Draw(graph *cgraph.Graph, activities map[int]*activity.Activity) (err error
 
 // GraphToImage renders a graph to an image
 func GraphToImage(graph *graphviz.Graphviz, g *cgraph.Graph, format graphviz.Format, filename string) (err error) {
-	err = graph.RenderFilename(g, format, filename)
-	return
+	return graph.RenderFilename(g, format, filename)
 }

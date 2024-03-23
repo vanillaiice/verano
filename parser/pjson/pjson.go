@@ -9,13 +9,12 @@ import (
 )
 
 // ExportToDb populates the database with activities in json format.
-func ExportToDb(sqldb *db.DB, reader io.Reader, duplicateInsertPolicy ...db.DuplicateInsertPolicy) (err error) {
+func ExportToDb(sqldb *db.DB, reader io.Reader, duplicateInsertPolicy db.DuplicateInsertPolicy) (err error) {
 	activities, err := JSONtoActivities(reader)
 	if err != nil {
 		return
 	}
-	err = sqldb.InsertActivities(activities, duplicateInsertPolicy...)
-	return
+	return sqldb.InsertActivities(activities, duplicateInsertPolicy)
 }
 
 // ActivitiesToJSON converts a slice of activities to json format.

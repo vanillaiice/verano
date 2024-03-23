@@ -70,7 +70,7 @@ func TestExportToDb(t *testing.T) {
 		t.Error(err)
 	}
 	r := bytes.NewReader([]byte(j))
-	err = ExportToDb(sqldb, r)
+	err = ExportToDb(sqldb, r, db.None)
 	if err != nil {
 		t.Error(err)
 	}
